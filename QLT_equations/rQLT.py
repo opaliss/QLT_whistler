@@ -33,18 +33,18 @@ def eta(z, A, q, beta_par):
 
 
 # dispersion relation
-def dispersion_relation(q, beta_par_c, beta_par_h, beta_par_i, A_c, A_h, delta, M=1836, include_cold=True):
+def dispersion_relation(q, beta_par_c, beta_par_h, beta_par_i, A_c, A_h, delta, M=1836, wpewce=4, include_cold=True):
     if include_cold:
-        return lambda z: q ** 2 - xi_0(z=z, q=q, beta_par=beta_par_i, M=M) * Z(
-            xi=xi_1(z=z, q=q, beta_par=beta_par_i, M=M)) \
-                         - (1 - delta) * (A_c + eta(z, A=A_c, q=q, beta_par=beta_par_c) * Z(
-            xi=xi_1(z, q=q, beta_par=beta_par_c))) \
-                         - delta * (A_h + eta(z, A=A_h, q=q, beta_par=beta_par_h) * Z(
-            xi=xi_1(z, q=q, beta_par=beta_par_h)))
+        return lambda z: q ** 2 \
+                         - z**2/(wpewce**2)\
+                         - xi_0(z=z, q=q, beta_par=beta_par_i, M=M) * Z(xi=xi_1(z=z, q=q, beta_par=beta_par_i, M=M)) \
+                         - (1 - delta) * (A_c + eta(z, A=A_c, q=q, beta_par=beta_par_c) * Z(xi=xi_1(z, q=q, beta_par=beta_par_c))) \
+                         - delta * (A_h + eta(z, A=A_h, q=q, beta_par=beta_par_h) * Z(xi=xi_1(z, q=q, beta_par=beta_par_h)))
     else:
-        return lambda z: q ** 2 - xi_0(z=z, q=q, beta_par=beta_par_i, M=M) * Z(
-            xi=xi_1(z=z, q=q, beta_par=beta_par_i, M=M)) - delta * (A_h + eta(z, A=A_h, q=q, beta_par=beta_par_h) * Z(
-            xi=xi_1(z, q=q, beta_par=beta_par_h)))
+        return lambda z: q ** 2 \
+                         - z ** 2 / (wpewce ** 2) \
+                         - xi_0(z=z, q=q, beta_par=beta_par_i, M=M) * Z(xi=xi_1(z=z, q=q, beta_par=beta_par_i, M=M)) \
+                         - delta * (A_h + eta(z, A=A_h, q=q, beta_par=beta_par_h) * Z(xi=xi_1(z, q=q, beta_par=beta_par_h)))
 
 
 def get_z_vec(q_vec, A_h, A_c, beta_par_c, beta_par_h, beta_par_i, delta, include_cold=True):
