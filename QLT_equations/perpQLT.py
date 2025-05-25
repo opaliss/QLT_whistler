@@ -13,17 +13,7 @@ Author: Opal Issan (oissan@ucsd.edu)
 """
 
 import numpy as np
-from QLT_equations.general_plasma_equations import Z_prime, I, J
-
-
-def trap(vec, dx):
-    """trapezoidal rule for integration
-
-    :param vec: 1a array, arbitrary vector
-    :param dx: float, assume uniform spacing of the samples
-    :return: trapezoidal approximation of the integral of the vector => int v(x) dx
-    """
-    return np.sum((vec[:-1] + vec[1:]) * 0.5 * dx)
+from QLT_equations.general_plasma_equations import Z_prime, I, J, trap
 
 
 def dKdt(omega_pi, alpha_i, E_vec, k_vec, omega_vec, dk, omega_0, v_0, m_star=-3):
@@ -167,7 +157,7 @@ def dispersion_relation(k_perp, omega_pe, omega_0, omega_pi, v_0, alpha_i, alpha
     :param n_c: float, ratio of cold electron density to total cold electron density
     :param m_star: int, most relevant sideband in the dispersion relation
     :param n_max: int, maximum number of bessel terms to include in the summation
-    :return: D(omega)
+    :return: D(omega, k_perp)
     """
     return lambda omega: k_perp ** 2 \
                          + cold_electron_response(k_perp=k_perp, omega=omega, n_max=n_max, omega_pe=omega_pe,
