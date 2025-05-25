@@ -1,8 +1,8 @@
-"""
-(resonant) QLT functions
+"""Module with primary whistler wave QLT evolution equations
+
+Last modified: May 25th, 2025
 
 Author: Opal Issan (oissan@ucsd.edu)
-Last modified: March 26th, 2025
 """
 import numpy as np
 from scipy.special import wofz
