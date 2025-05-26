@@ -182,7 +182,7 @@ def dKpardt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, n_c, k_par, k_perp, omeg
 
 
 def dTperpdt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, k_par, k_perp, omega_vec, dk_perp,
-             dk_par, n_max=50):
+             dk_par, n_max=10):
     """
 
     :param n_max:
@@ -206,8 +206,7 @@ def dTperpdt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, k_par, k_perp, omega_ve
         for n in range(-n_max, n_max + 1):
             xi_n = ((omega_vec[ii] - n) / k_par[ii] / alpha_c_par).real
             xi_0 = (omega_vec[ii] / k_par[ii] / alpha_c_par).real
-            term_1 += n * I(Lambda=lambda_, m=n) * (xi_0 + n / k_par[ii] / alpha_c_par * anisotropy_term) \
-                      * np.exp(-xi_n ** 2)
+            term_1 += n * I(Lambda=lambda_, m=n) * (xi_0 + n / k_par[ii] / alpha_c_par * anisotropy_term) * np.exp(-xi_n ** 2)
         sol[ii] = E_vec[ii] / k2 * term_1
         return 0.5 * (omega_pe ** 2) / (alpha_c_par ** 2) / np.sqrt(np.pi) * np.sum(sol) * dk_par * dk_perp
 
