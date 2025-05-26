@@ -31,7 +31,6 @@ def get_omega_vec(k_perp, k_par, omega_pe, omega_pi, v_0, alpha_i, alpha_c_perp,
                                                                       alpha_c_par=alpha_c_par, n_c=n_c),
                                                   x0=omega_0 * 0.99 + 1e-3j, tol=1e-15)
         except:
-            print("dispersion relation failed to converge")
             print("k||", str(k_par[ii]))
             print("k|_", str(k_perp[ii]))
     return omega_vec

@@ -30,7 +30,7 @@ def get_omega_vec(k_vec, omega_pe, omega_pi, v_0, alpha_i, alpha_perp_c, n_c, om
 
 def dydt(t, f, k_vec, omega_pe, omega_pi, k_0, alpha_i, n_c, dk, omega_0):
     # dispersion solver
-    omega_vec = get_omega_vec(k_vec=k_vec, omega_pe=omega_pe, omega_pi=omega_pi, v_0=v_0, omega_0=omega_0,
+    omega_vec = get_omega_vec(k_vec=k_vec, omega_pe=omega_pe, omega_pi=omega_pi, v_0=np.sqrt(f[2]), omega_0=omega_0,
                               alpha_i=alpha_i, alpha_perp_c=np.sqrt(2 * f[0] / n_c), n_c=n_c)
 
     fig, ax = plt.subplots(figsize=(6, 3))
@@ -94,3 +94,12 @@ if __name__ == "__main__":
 
     # max time
     t_max = 600
+
+    dE_init = E0 * np.ones(len(k_vec))
+
+    # simulate
+    result = scipy.integrate.solve_ivp(fun=dydt, t_span=[0, t_max],
+                                       y0=np.concatenate(([K0], [dB0], [v_0**2], dE_init)),
+                                       args=(k_vec, omega_pe, omega_pi, k_0, alpha_i, n_c, dk, omega_0),
+                                       atol=1e-10, rtol=1e-10,
+                                       method='BDF')

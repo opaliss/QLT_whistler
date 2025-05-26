@@ -265,7 +265,7 @@ def dBdt(omega_0, k_0, E_vec, omega_pe, alpha_c_par, alpha_c_perp,
     dK_par_dt = dKpardt(E_vec=E_vec, omega_pe=omega_pe, alpha_c_par=alpha_c_par, alpha_c_perp=alpha_c_perp,
                         n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec, dk_perp=dk_perp, dk_par=dk_par)
     dE_dt = np.sum(dEdt(gamma=omega_vec.imag, E_vec=E_vec)) * dk_par * dk_perp
-    return 4 * np.pi / const * (-dK_perp_dt - dK_par_dt - 1 / np.pi * dE_dt)
+    return 4 * np.pi / const * (-dK_perp_dt - 0.5 * dK_par_dt - 1 / np.pi * dE_dt)
 
 
 def dVdt(omega_0, k_0, E_vec, omega_pe, alpha_c_par, alpha_c_perp,
