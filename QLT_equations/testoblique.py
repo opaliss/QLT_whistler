@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('TkAgg')
+import os
 import scipy
 from QLT_equations.obliqueQLT import dispersion_relation, dKperpdt, dTperpdt, dKpardt, dTpardt, dBdt, dEdt, dVdt
 
@@ -57,18 +58,18 @@ def dydt(t, f, k_perp, k_par, omega_pe, omega_pi, k_0, alpha_i, n_c, dk_perp, dk
     omega_vec = get_omega_vec(k_perp=k_perp, k_par=k_par, omega_pe=omega_pe, omega_pi=omega_pi, v_0=np.sqrt(f[5]),
                               alpha_i=alpha_i, alpha_c_perp=np.sqrt(2 * f[2]), alpha_c_par=np.sqrt(2 * f[3]), n_c=n_c,
                               omega_0=omega_0)
-
-    fig, ax= plt.subplots(figsize=(6, 3))
-    ax.plot(np.sqrt(k_perp**2 + k_par**2), omega_vec.imag, linewidth=2)
-    ax.set_ylabel('$\gamma/\Omega_{ce}$', rotation=90)
-    ax.set_xlabel(r"$|\vec{k}|d_{e}$")
-    ax.set_ylim(-0.0005, 0.012)
-    ax.set_title("$t = $" + str(round(t)))
-    ax.spines['right'].set_visible(False)
-    ax.spines['top'].set_visible(False)
-    plt.tight_layout()
-    plt.savefig("/Users/oissan/PycharmProjects/QLT_whistler/figs/vadim_2021/oblique_gamma/t_" + str(round(t))+ ".png", dpi=300, bbox_inches='tight')
-    plt.close()
+    if os.path.exists("/Users/oissan/PycharmProjects/QLT_whistler/figs/vadim_2021/oblique_gamma/t_" + str(round(t))+ ".png") is False:
+        fig, ax= plt.subplots(figsize=(6, 3))
+        ax.plot(np.sqrt(k_perp**2 + k_par**2), omega_vec.imag, linewidth=2)
+        ax.set_ylabel('$\gamma/\Omega_{ce}$', rotation=90)
+        ax.set_xlabel(r"$|\vec{k}|d_{e}$")
+        ax.set_ylim(-0.0005, 0.012)
+        ax.set_title("$t = $" + str(round(t)))
+        ax.spines['right'].set_visible(False)
+        ax.spines['top'].set_visible(False)
+        plt.tight_layout()
+        plt.savefig("/Users/oissan/PycharmProjects/QLT_whistler/figs/vadim_2021/oblique_gamma/t_" + str(round(t))+ ".png", dpi=300, bbox_inches='tight')
+        plt.close()
 
     # cold electron kinetic energy
     rhs_K_perp = dKperpdt(E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]),
