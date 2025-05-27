@@ -32,8 +32,20 @@ def get_omega_vec(k_perp, k_par, omega_pe, omega_pi, v_0, alpha_i, alpha_c_perp,
                                                                       alpha_c_par=alpha_c_par, n_c=n_c),
                                                   x0=omega_0 * 0.99 + 1e-3j, tol=1e-15)
         except:
-            print("k||", str(k_par[ii]))
-            print("k|_", str(k_perp[ii]))
+            try:
+                omega_vec[ii] = scipy.optimize.newton(dispersion_relation(k_perp=k_perp[ii], k_par=k_par[ii],
+                                                                          omega_pe=omega_pe, omega_pi=omega_pi,
+                                                                          omega_0=omega_0, v_0=v_0,
+                                                                          alpha_c_perp=alpha_c_perp, alpha_i=alpha_i,
+                                                                          alpha_c_par=alpha_c_par, n_c=n_c),
+                                                      x0=omega_0 * 0.99 + 1e-5j, tol=1e-15)
+            except:
+                print("k||", str(k_par[ii]))
+                print("k|_", str(k_perp[ii]))
+
+        if omega_vec[ii].imag < -0.01:
+            #print("negative detected", str(np.sqrt(k_par[ii]**2 + k_perp[ii]**2)))
+            omega_vec[ii] = 0
     return omega_vec
 
 
@@ -58,17 +70,18 @@ def dydt(t, f, k_perp, k_par, omega_pe, omega_pi, k_0, alpha_i, n_c, dk_perp, dk
     omega_vec = get_omega_vec(k_perp=k_perp, k_par=k_par, omega_pe=omega_pe, omega_pi=omega_pi, v_0=np.sqrt(f[5]),
                               alpha_i=alpha_i, alpha_c_perp=np.sqrt(2 * f[2]), alpha_c_par=np.sqrt(2 * f[3]), n_c=n_c,
                               omega_0=omega_0)
-    if os.path.exists("/Users/oissan/PycharmProjects/QLT_whistler/figs/vadim_2021/oblique_gamma/t_" + str(round(t))+ ".png") is False:
-        fig, ax= plt.subplots(figsize=(6, 3))
+    if os.path.exists("/Users/oissan/PycharmProjects/QLT_whistler/figs/secondary_QLT/oblique_gamma/t_" + str(round(t))+ ".png") is False:
+        fig, ax = plt.subplots(figsize=(6, 3))
         ax.plot(np.sqrt(k_perp**2 + k_par**2), omega_vec.imag, linewidth=2)
-        ax.set_ylabel('$\gamma/\Omega_{ce}$', rotation=90)
+        ax.set_ylabel(r"$\gamma/\Omega_{ce}$", rotation=90)
         ax.set_xlabel(r"$|\vec{k}|d_{e}$")
-        ax.set_ylim(-0.0005, 0.012)
+        ax.set_ylim(-0.012, 0.012)
         ax.set_title("$t = $" + str(round(t)))
         ax.spines['right'].set_visible(False)
         ax.spines['top'].set_visible(False)
+        plt.grid(alpha=0.5)
         plt.tight_layout()
-        plt.savefig("/Users/oissan/PycharmProjects/QLT_whistler/figs/vadim_2021/oblique_gamma/t_" + str(round(t))+ ".png", dpi=300, bbox_inches='tight')
+        plt.savefig("/Users/oissan/PycharmProjects/QLT_whistler/figs/secondary_QLT/oblique_gamma/t_" + str(round(t)) + ".png", dpi=300, bbox_inches='tight')
         plt.close()
 
     # cold electron kinetic energy

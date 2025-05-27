@@ -65,12 +65,12 @@ def electron_response(n_c, omega_pe, alpha_c_par, alpha_c_perp, omega, k_par, n_
                          k_par=k_par, n_max=n_max, alpha_c_par=alpha_c_par, n_factor=1))
 
 
-def ion_response(omega_pi, alpha_i, m_star, k_perp, v_0, omega_0, omega, k_par):
+def ion_response(omega_pi, alpha_i, k_perp, v_0, omega_0, omega, k_par, m_star=-1):
     """linear ion response
 
     :param omega_pi: float, ion plasma frequency
     :param alpha_i: float, sqrt(2T_{i}/m_{i})
-    :param m_star: int, most important bessel combination
+    :param m_star: int, most important bessel combination, default is m_star=-1
     :param k_perp: float or 1d array, perpendicular wavenumber
     :param v_0: float, cold electron drift magnitude caused by the polarized electric field of the primary wave
     :param omega_0: float, frequency of the primary wave at saturation
@@ -265,7 +265,7 @@ def dBdt(omega_0, k_0, E_vec, omega_pe, alpha_c_par, alpha_c_perp,
     dK_par_dt = dKpardt(E_vec=E_vec, omega_pe=omega_pe, alpha_c_par=alpha_c_par, alpha_c_perp=alpha_c_perp,
                         n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec, dk_perp=dk_perp, dk_par=dk_par)
     dE_dt = np.sum(dEdt(gamma=omega_vec.imag, E_vec=E_vec)) * dk_par * dk_perp
-    return 4 * np.pi / const * (-dK_perp_dt - 0.5 * dK_par_dt - 1 / np.pi * dE_dt)
+    return 4 * np.pi / const * (-dK_perp_dt - 0.5 * dK_par_dt - 1 / np.pi / 2 * dE_dt)
 
 
 def dVdt(omega_0, k_0, E_vec, omega_pe, alpha_c_par, alpha_c_perp,

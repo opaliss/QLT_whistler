@@ -13,7 +13,7 @@ Author: Opal Issan (oissan@ucsd.edu)
 """
 
 import numpy as np
-from QLT_equations.general_plasma_equations import Z_prime, I, J, trap
+from QLT_equations.general_plasma_equations import Z_prime, I, J
 
 
 def dKdt(omega_pi, alpha_i, E_vec, k_vec, omega_vec, dk, omega_0, v_0, m_star=-3):
@@ -34,11 +34,11 @@ def dKdt(omega_pi, alpha_i, E_vec, k_vec, omega_vec, dk, omega_0, v_0, m_star=-3
     sol = np.zeros(len(k_vec))
     # loop over each wavenumber
     for ii in range(len(k_vec)):
-        ions = ion_response(omega_pi=omega_pi, alpha_i=alpha_i, m_star=m_star,
-                            omega=omega_vec[ii], omega_0=omega_0, k_perp=k_vec[ii], v_0=v_0)
+        ions = ion_response(omega_pi=omega_pi, alpha_i=alpha_i, m_star=m_star, omega=omega_vec[ii], omega_0=omega_0,
+                            k_perp=k_vec[ii], v_0=v_0)
         sol[ii] = E_vec[ii] * (omega_vec[ii] * (1 - ions / (k_vec[ii] ** 2))).imag
     # integrate over all relevant wavenumbers
-    return -(1 / (2 * np.pi)) * trap(vec=sol, dx=dk)
+    return -1 / 2 / np.pi * np.sum(sol)*dk
 
 
 def dEdt(gamma, E_vec):
@@ -73,7 +73,7 @@ def dBdt(omega_pi, omega_pe, alpha_i, E_vec, k_vec, omega_vec, dk, omega_0, v_0,
                             omega_0=omega_0, k_perp=k_vec[ii], v_0=v_0)
         sol[ii] = E_vec[ii] * (omega_vec[ii] * ions / (k_vec[ii] ** 2)).imag
     const = (omega_0 ** 2) / ((k_0 ** 2) * (omega_pe ** 2)) + 1
-    return -(2 / const) * trap(vec=sol, dx=dk)
+    return -(2 / const) * np.sum(sol) * dk
 
 
 def dVdt(omega_0, k_0, omega_pi, omega_pe, alpha_i, E_vec, k_vec, omega_vec, dk, v_0, m_star=-3):

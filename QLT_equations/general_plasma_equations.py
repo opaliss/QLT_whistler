@@ -48,11 +48,3 @@ def J(Lambda, m):
     """
     return scipy.special.jv(m, Lambda)
 
-def trap(vec, dx):
-    """trapezoidal rule for integration
-
-    :param vec: 1a array, arbitrary vector
-    :param dx: float, assume uniform spacing of the samples
-    :return: trapezoidal approximation of the integral of the vector => int v(x) dx
-    """
-    return np.sum((vec[:-1] + vec[1:]) * 0.5 * dx)

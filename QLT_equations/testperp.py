@@ -11,20 +11,21 @@ def get_omega_vec(k_vec, omega_pe, omega_pi, v_0, alpha_i, alpha_perp_c, n_c, om
     omega_vec = np.zeros(len(k_vec), dtype="complex128")
     for ii, kk in enumerate(k_vec):
         try:
-            ic1 = 1.5 + 1E-3j
             omega_vec[ii] = scipy.optimize.newton(dispersion_relation(k_perp=kk, omega_pe=omega_pe, omega_0=omega_0,
                                                                       omega_pi=omega_pi, v_0=v_0, alpha_i=alpha_i,
-                                                                      alpha_perp_c=alpha_perp_c, n_c=n_c), x0=ic1,
-                                                  tol=1e-15)
+                                                                      alpha_perp_c=alpha_perp_c, n_c=n_c),
+                                                                      x0=1.5 + 1E-3j, tol=1e-15)
         except:
             try:
-                ic2 = 1. + 1E-4j
                 omega_vec[ii] = scipy.optimize.newton(dispersion_relation(k_perp=kk, omega_pe=omega_pe, omega_0=omega_0,
                                                                           omega_pi=omega_pi, v_0=v_0, alpha_i=alpha_i,
-                                                                          alpha_perp_c=alpha_perp_c, n_c=n_c), x0=ic2,
-                                                      tol=1e-15)
+                                                                          alpha_perp_c=alpha_perp_c, n_c=n_c),
+                                                                          x0=1. + 1E-4j, tol=1e-15)
             except:
-                omega_vec[ii] = 0
+                print("k|_", str(kk))
+        if omega_vec[ii].imag < -0.01:
+            print("negative detected", kk)
+            omega_vec[ii] = 0
     return omega_vec
 
 
@@ -43,7 +44,7 @@ def dydt(t, f, k_vec, omega_pe, omega_pi, k_0, alpha_i, n_c, dk, omega_0):
     ax.spines['right'].set_visible(False)
     ax.spines['top'].set_visible(False)
     plt.tight_layout()
-    plt.savefig("figs/vadim_2021/perp_gamma/t_" + str(round(t)) + ".png", dpi=300, bbox_inches='tight')
+    plt.savefig("figs/secondary_QLT/perp_gamma/t_" + str(round(t)) + ".png", dpi=300, bbox_inches='tight')
     plt.close()
 
     # cold electron kinetic energy
@@ -60,8 +61,7 @@ def dydt(t, f, k_vec, omega_pe, omega_pi, k_0, alpha_i, n_c, dk, omega_0):
 
     # drift magnitude of cold electrons
     rhs_V = dVdt(omega_0=omega_0, k_0=k_0, omega_pi=omega_pi, alpha_i=alpha_i, E_vec=f[3:], k_vec=k_vec,
-                 omega_vec=omega_vec,
-                 dk=dk, v_0=np.sqrt(f[2]), omega_pe=omega_pe)
+                 omega_vec=omega_vec, dk=dk, v_0=np.sqrt(f[2]), omega_pe=omega_pe)
 
     print("t = ", t)
     print("max gamma = ", np.max(omega_vec.imag))
