@@ -1,5 +1,5 @@
 """Module with QLT equations describing the oblique electrostatic
-secondary instability (oblique whistler)
+secondary_waves instability (oblique whistler)
 
 References
 ----------

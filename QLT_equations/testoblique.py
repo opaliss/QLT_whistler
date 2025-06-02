@@ -102,13 +102,13 @@ def dydt(t, f, k_perp, k_par, omega_pe, omega_pi, k_0, alpha_i, n_c, dk_perp, dk
     rhs_K_par = dKpardt(E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]), alpha_c_perp=np.sqrt(2 * f[2]),
                         n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec, dk_perp=dk_perp, dk_par=dk_par)
 
-    rhs_K_perp_ = dKperpdt(E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]),
-                           alpha_c_perp=np.sqrt(2 * f[2]),
-                           n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec.real,
-                           dk_perp=dk_perp, dk_par=dk_par)
-
-    rhs_K_par_ = dKpardt(E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]), alpha_c_perp=np.sqrt(2 * f[2]),
-                         n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec.real, dk_perp=dk_perp, dk_par=dk_par)
+    # rhs_K_perp_ = dKperpdt(E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]),
+    #                        alpha_c_perp=np.sqrt(2 * f[2]),
+    #                        n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec.real,
+    #                        dk_perp=dk_perp, dk_par=dk_par)
+    #
+    # rhs_K_par_ = dKpardt(E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]), alpha_c_perp=np.sqrt(2 * f[2]),
+    #                      n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec.real, dk_perp=dk_perp, dk_par=dk_par)
 
     # cold electron temperature
     rhs_T_perp = dTperpdt(E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]), alpha_c_perp=np.sqrt(2 * f[2]),
@@ -131,7 +131,7 @@ def dydt(t, f, k_perp, k_par, omega_pe, omega_pi, k_0, alpha_i, n_c, dk_perp, dk
     rhs_E = dEdt(gamma=omega_vec.imag, E_vec=f[6:])
 
     print("t = ", t)
-    print("max gamma = ", np.max(omega_vec.imag))
+    # print("max gamma = ", np.max(omega_vec.imag))
     return np.concatenate(([rhs_K_perp], [rhs_K_par], [rhs_T_perp], [rhs_T_par], [rhs_B], [rhs_V], rhs_E))
 
 
