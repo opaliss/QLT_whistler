@@ -8,7 +8,8 @@ matplotlib.use('TkAgg')
 from QLT_equations.perpQLT import dispersion_relation, dVdt, dBdt, dEdt, dKdt
 
 
-def get_omega_vec(k_vec, omega_pe, omega_pi, v_0, alpha_i, alpha_perp_c, n_c, omega_0):
+def get_omega_vec(k_vec, omega_pe, omega_pi, v_0, alpha_i, alpha_perp_c, n_c, omega_0,
+                  ic1=1.5 + 1E-3j, ic2=1. + 1E-4j, tol=1e-15):
     """
 
     :param k_vec:
@@ -27,13 +28,13 @@ def get_omega_vec(k_vec, omega_pe, omega_pi, v_0, alpha_i, alpha_perp_c, n_c, om
             omega_vec[ii] = scipy.optimize.newton(dispersion_relation(k_perp=kk, omega_pe=omega_pe, omega_0=omega_0,
                                                                       omega_pi=omega_pi, v_0=v_0, alpha_i=alpha_i,
                                                                       alpha_perp_c=alpha_perp_c, n_c=n_c),
-                                                                      x0=1.5 + 1E-3j, tol=1e-15)
+                                                                      x0=ic1, tol=tol)
         except:
             try:
                 omega_vec[ii] = scipy.optimize.newton(dispersion_relation(k_perp=kk, omega_pe=omega_pe, omega_0=omega_0,
                                                                           omega_pi=omega_pi, v_0=v_0, alpha_i=alpha_i,
                                                                           alpha_perp_c=alpha_perp_c, n_c=n_c),
-                                                                          x0=1. + 1E-4j, tol=1e-15)
+                                                                          x0=ic2, tol=tol)
             except:
                 print("k|_", str(kk))
         if omega_vec[ii].imag < 0:
@@ -66,7 +67,7 @@ def dydt(t, f, k_vec, omega_pe, omega_pi, k_0, alpha_i, n_c, dk, omega_0, folder
                       + str(folder_name) + "/t_" + str(round(t)) + ".png") is False:
         fig, ax = plt.subplots(figsize=(6, 3))
         ax.plot(k_vec, omega_vec.imag, linewidth=2)
-        ax.set_ylabel('$\gamma/\Omega_{ce}$', rotation=90)
+        ax.set_ylabel('$\gamma/|\Omega_{ce}|$', rotation=90)
         ax.set_xlabel(r"$k_{\perp}d_{e}$")
         ax.set_ylim(-0.0005, 0.012)
         ax.set_xlim(176, 220)

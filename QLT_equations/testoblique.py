@@ -82,7 +82,7 @@ def dydt(t, f, k_perp, k_par, omega_pe, omega_pi, k_0, alpha_i, n_c, dk_perp, dk
                       + str(folder_name) + "/t_" + str(round(t))+ ".png") is False:
         fig, ax = plt.subplots(figsize=(6, 3))
         ax.plot(np.sqrt(k_perp**2 + k_par**2), omega_vec.imag, linewidth=2)
-        ax.set_ylabel(r"$\gamma/\Omega_{ce}$", rotation=90)
+        ax.set_ylabel(r"$\gamma/|\Omega_{ce}|$", rotation=90)
         ax.set_xlabel(r"$|\vec{k}|d_{e}$")
         ax.set_ylim(-0.012, 0.012)
         ax.set_title("$t = $" + str(round(t)))
