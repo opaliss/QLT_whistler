@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy
+import os
 import matplotlib
 
 matplotlib.use('TkAgg')
@@ -8,6 +9,18 @@ from QLT_equations.perpQLT import dispersion_relation, dVdt, dBdt, dEdt, dKdt
 
 
 def get_omega_vec(k_vec, omega_pe, omega_pi, v_0, alpha_i, alpha_perp_c, n_c, omega_0):
+    """
+
+    :param k_vec:
+    :param omega_pe:
+    :param omega_pi:
+    :param v_0:
+    :param alpha_i:
+    :param alpha_perp_c:
+    :param n_c:
+    :param omega_0:
+    :return:
+    """
     omega_vec = np.zeros(len(k_vec), dtype="complex128")
     for ii, kk in enumerate(k_vec):
         try:
@@ -28,24 +41,41 @@ def get_omega_vec(k_vec, omega_pe, omega_pi, v_0, alpha_i, alpha_perp_c, n_c, om
     return omega_vec
 
 
-def dydt(t, f, k_vec, omega_pe, omega_pi, k_0, alpha_i, n_c, dk, omega_0):
+def dydt(t, f, k_vec, omega_pe, omega_pi, k_0, alpha_i, n_c, dk, omega_0, folder_name="perp_gamma"):
+    """
+
+    :param t:
+    :param f:
+    :param k_vec:
+    :param omega_pe:
+    :param omega_pi:
+    :param k_0:
+    :param alpha_i:
+    :param n_c:
+    :param dk:
+    :param omega_0:
+    :param folder_name:
+    :return:
+    """
     # dispersion solver
     omega_vec = get_omega_vec(k_vec=k_vec, omega_pe=omega_pe, omega_pi=omega_pi,
                               v_0=np.sqrt(f[3]), omega_0=omega_0,
                               alpha_i=alpha_i, alpha_perp_c=np.sqrt(2 * f[1]), n_c=n_c)
 
-    fig, ax = plt.subplots(figsize=(6, 3))
-    ax.plot(k_vec, omega_vec.imag, linewidth=2)
-    ax.set_ylabel('$\gamma/\Omega_{ce}$', rotation=90)
-    ax.set_xlabel(r"$k_{\perp}d_{e}$")
-    ax.set_ylim(-0.0005, 0.012)
-    ax.set_xlim(176, 220)
-    ax.set_title("$t = $" + str(round(t)))
-    ax.spines['right'].set_visible(False)
-    ax.spines['top'].set_visible(False)
-    plt.tight_layout()
-    plt.savefig("/Users/oissan/PycharmProjects/QLT_whistler/figs/secondary_QLT/perp_gamma/t_" + str(round(t)) + ".png", dpi=300, bbox_inches='tight')
-    plt.close()
+    if os.path.exists("/Users/oissan/PycharmProjects/QLT_whistler/figs/secondary_QLT/"
+                      + str(folder_name) + "/t_" + str(round(t)) + ".png") is False:
+        fig, ax = plt.subplots(figsize=(6, 3))
+        ax.plot(k_vec, omega_vec.imag, linewidth=2)
+        ax.set_ylabel('$\gamma/\Omega_{ce}$', rotation=90)
+        ax.set_xlabel(r"$k_{\perp}d_{e}$")
+        ax.set_ylim(-0.0005, 0.012)
+        ax.set_xlim(176, 220)
+        ax.set_title("$t = $" + str(round(t)))
+        ax.spines['right'].set_visible(False)
+        ax.spines['top'].set_visible(False)
+        plt.tight_layout()
+        plt.savefig("/Users/oissan/PycharmProjects/QLT_whistler/figs/secondary_QLT/" + str(folder_name) + "/t_" + str(round(t)) + ".png", dpi=300, bbox_inches='tight')
+        plt.close()
 
     # cold electron kinetic energy
     rhs_K = dKdt(omega_pi=omega_pi, alpha_i=alpha_i, E_vec=f[4:], k_vec=k_vec, omega_vec=omega_vec, dk=dk,
