@@ -131,7 +131,7 @@ def dydt(t, f, k_perp, k_par, omega_pe, omega_pi, k_0, alpha_i, n_c, dk_perp, dk
     rhs_E = dEdt(gamma=omega_vec.imag, E_vec=f[6:])
 
     print("t = ", t)
-    # print("max gamma = ", np.max(omega_vec.imag))
+    print("max gamma = ", np.max(omega_vec.imag))
     return np.concatenate(([rhs_K_perp], [rhs_K_par], [rhs_T_perp], [rhs_T_par], [rhs_B], [rhs_V], rhs_E))
 
 
