@@ -82,7 +82,7 @@ def ion_response(omega_pi, alpha_i, k_perp, v_0, omega_0, omega, k_par, m_star=-
     # Bessel argument ion Doppler-shifted
     a = k_perp * np.abs(v_0) / omega_0
     return (omega_pi ** 2) / (alpha_i ** 2) * (J(m=m_star, Lambda=a) ** 2) \
-           * Z_prime(z=(omega - omega_0) / (alpha_i * k_abs))
+           * Z_prime(z=(omega + m_star * omega_0) / (alpha_i * k_abs))
 
 
 def dispersion_relation(k_perp, k_par, omega_pe, omega_pi, omega_0, v_0, alpha_i,
@@ -182,7 +182,7 @@ def dKpardt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, n_c, k_par, k_perp, omeg
 
 
 def dTperpdt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, k_par, k_perp, omega_vec, dk_perp,
-             dk_par, n_max=10):
+             dk_par, n_max=50):
     """
 
     :param n_max:
@@ -206,13 +206,15 @@ def dTperpdt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, k_par, k_perp, omega_ve
         for n in range(-n_max, n_max + 1):
             xi_n = ((omega_vec[ii] - n) / k_par[ii] / alpha_c_par).real
             xi_0 = (omega_vec[ii] / k_par[ii] / alpha_c_par).real
-            term_1 += n * I(Lambda=lambda_, m=n) * (xi_0 + n / k_par[ii] / alpha_c_par * anisotropy_term) * np.exp(-xi_n ** 2)
+            exp = np.exp(-xi_n ** 2)
+            add = n * I(Lambda=lambda_, m=n) * (xi_0 + n / k_par[ii] / alpha_c_par * anisotropy_term)
+            term_1 += add * exp
         sol[ii] = E_vec[ii] / k2 * term_1
-        return 0.5 * (omega_pe ** 2) / (alpha_c_par ** 2) / np.sqrt(np.pi) * np.sum(sol) * dk_par * dk_perp
+    return 0.5 * (omega_pe ** 2) / (alpha_c_par ** 2) / np.sqrt(np.pi) * np.sum(sol) * dk_par * dk_perp
 
 
 def dTpardt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, k_par, k_perp, omega_vec, dk_perp,
-            dk_par, n_max=50):
+            dk_par, n_max=5):
     """
 
     :param E_vec:
@@ -235,7 +237,8 @@ def dTpardt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, k_par, k_perp, omega_vec
         term_1 = 0
         for n in range(-n_max, n_max + 1):
             xi_n = ((omega_vec[ii] - n) / k_par[ii] / alpha_c_par).real
-            term_1 += I(Lambda=lambda_, m=n) * (omega_vec[ii].real + n * anisotropy_term) * xi_n * np.exp(-xi_n ** 2)
+            exp = np.exp(-xi_n ** 2)
+            term_1 += I(Lambda=lambda_, m=n) * (omega_vec[ii].real + n * anisotropy_term) * xi_n * exp
         sol[ii] = E_vec[ii] / k2 * term_1
     return (omega_pe ** 2) / (alpha_c_par ** 2) / np.sqrt(np.pi) * np.sum(sol) * dk_par * dk_perp
 

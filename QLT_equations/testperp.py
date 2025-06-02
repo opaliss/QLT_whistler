@@ -23,9 +23,8 @@ def get_omega_vec(k_vec, omega_pe, omega_pi, v_0, alpha_i, alpha_perp_c, n_c, om
                                                                           x0=1. + 1E-4j, tol=1e-15)
             except:
                 print("k|_", str(kk))
-        if omega_vec[ii].imag < -0.01:
-            print("negative detected", kk)
-            omega_vec[ii] = 0
+        if omega_vec[ii].imag < 0:
+            omega_vec[ii] = omega_vec[ii].real
     return omega_vec
 
 
@@ -44,11 +43,11 @@ def dydt(t, f, k_vec, omega_pe, omega_pi, k_0, alpha_i, n_c, dk, omega_0):
     ax.spines['right'].set_visible(False)
     ax.spines['top'].set_visible(False)
     plt.tight_layout()
-    plt.savefig("figs/secondary_QLT/perp_gamma/t_" + str(round(t)) + ".png", dpi=300, bbox_inches='tight')
+    plt.savefig("/Users/oissan/PycharmProjects/QLT_whistler/figs/secondary_QLT/perp_gamma/t_" + str(round(t)) + ".png", dpi=300, bbox_inches='tight')
     plt.close()
 
     # cold electron kinetic energy
-    rhs_K = dKdt(omega_pi=omega_pi, alpha_i=alpha_i, E_vec=f[3:], k_vec=k_vec, omega_vec=omega_vec, dk=dk,
+    rhs_K = dKdt(omega_pi=omega_pi, alpha_i=alpha_i, E_vec=f[3:], k_vec=k_vec, omega_vec=omega_vec.real, dk=dk,
                  omega_0=omega_0, v_0=np.sqrt(f[2]))
 
     # electrostatic electric energy

@@ -34,7 +34,8 @@ def dKdt(omega_pi, alpha_i, E_vec, k_vec, omega_vec, dk, omega_0, v_0, m_star=-3
     sol = np.zeros(len(k_vec))
     # loop over each wavenumber
     for ii in range(len(k_vec)):
-        ions = ion_response(omega_pi=omega_pi, alpha_i=alpha_i, m_star=m_star, omega=omega_vec[ii], omega_0=omega_0,
+        ions = ion_response(omega_pi=omega_pi, alpha_i=alpha_i, m_star=m_star,
+                            omega=omega_vec[ii], omega_0=omega_0,
                             k_perp=k_vec[ii], v_0=v_0)
         sol[ii] = E_vec[ii] * (omega_vec[ii] * (1 - ions / (k_vec[ii] ** 2))).imag
     # integrate over all relevant wavenumbers

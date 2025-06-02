@@ -7,9 +7,12 @@ import scipy
 from QLT_equations.obliqueQLT import dispersion_relation, dKperpdt, dTperpdt, dKpardt, dTpardt, dBdt, dEdt, dVdt
 
 
-def get_omega_vec(k_perp, k_par, omega_pe, omega_pi, v_0, alpha_i, alpha_c_perp, alpha_c_par, n_c, omega_0):
+def get_omega_vec(k_perp, k_par, omega_pe, omega_pi, v_0, alpha_i, alpha_c_perp, alpha_c_par, n_c, omega_0, m_star=-1,
+                  ic1=0.5 * 0.99 + 1e-3j, ic2=0.5 * 0.99 + 1e-5j):
     """
 
+    :param ic2:
+    :param ic1:
     :param k_perp:
     :param k_par:
     :param omega_pe:
@@ -29,27 +32,26 @@ def get_omega_vec(k_perp, k_par, omega_pe, omega_pi, v_0, alpha_i, alpha_c_perp,
                                                                       omega_pe=omega_pe, omega_pi=omega_pi,
                                                                       omega_0=omega_0, v_0=v_0,
                                                                       alpha_c_perp=alpha_c_perp, alpha_i=alpha_i,
-                                                                      alpha_c_par=alpha_c_par, n_c=n_c),
-                                                  x0=omega_0 * 0.99 + 1e-3j, tol=1e-15)
+                                                                      alpha_c_par=alpha_c_par, n_c=n_c, m_star=m_star),
+                                                  x0=ic1, tol=1e-15)
         except:
             try:
                 omega_vec[ii] = scipy.optimize.newton(dispersion_relation(k_perp=k_perp[ii], k_par=k_par[ii],
                                                                           omega_pe=omega_pe, omega_pi=omega_pi,
                                                                           omega_0=omega_0, v_0=v_0,
                                                                           alpha_c_perp=alpha_c_perp, alpha_i=alpha_i,
-                                                                          alpha_c_par=alpha_c_par, n_c=n_c),
-                                                      x0=omega_0 * 0.99 + 1e-5j, tol=1e-15)
+                                                                          alpha_c_par=alpha_c_par, n_c=n_c, m_star=m_star),
+                                                      x0=ic2, tol=1e-15)
             except:
                 print("k||", str(k_par[ii]))
                 print("k|_", str(k_perp[ii]))
 
-        if omega_vec[ii].imag < -0.01:
-            #print("negative detected", str(np.sqrt(k_par[ii]**2 + k_perp[ii]**2)))
-            omega_vec[ii] = 0
+        if omega_vec[ii].imag < 0:
+            omega_vec[ii] = omega_vec[ii].real
     return omega_vec
 
 
-def dydt(t, f, k_perp, k_par, omega_pe, omega_pi, k_0, alpha_i, n_c, dk_perp, dk_par, omega_0):
+def dydt(t, f, k_perp, k_par, omega_pe, omega_pi, k_0, alpha_i, n_c, dk_perp, dk_par, omega_0, m_star):
     """
 
     :param t:
@@ -69,7 +71,7 @@ def dydt(t, f, k_perp, k_par, omega_pe, omega_pi, k_0, alpha_i, n_c, dk_perp, dk
     # dispersion solver
     omega_vec = get_omega_vec(k_perp=k_perp, k_par=k_par, omega_pe=omega_pe, omega_pi=omega_pi, v_0=np.sqrt(f[5]),
                               alpha_i=alpha_i, alpha_c_perp=np.sqrt(2 * f[2]), alpha_c_par=np.sqrt(2 * f[3]), n_c=n_c,
-                              omega_0=omega_0)
+                              omega_0=omega_0, m_star=m_star)
     if os.path.exists("/Users/oissan/PycharmProjects/QLT_whistler/figs/secondary_QLT/oblique_gamma/t_" + str(round(t))+ ".png") is False:
         fig, ax = plt.subplots(figsize=(6, 3))
         ax.plot(np.sqrt(k_perp**2 + k_par**2), omega_vec.imag, linewidth=2)
@@ -91,6 +93,14 @@ def dydt(t, f, k_perp, k_par, omega_pe, omega_pi, k_0, alpha_i, n_c, dk_perp, dk
 
     rhs_K_par = dKpardt(E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]), alpha_c_perp=np.sqrt(2 * f[2]),
                         n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec, dk_perp=dk_perp, dk_par=dk_par)
+
+    rhs_K_perp_ = dKperpdt(E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]),
+                          alpha_c_perp=np.sqrt(2 * f[2]), n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec.real,
+                          dk_perp=dk_perp, dk_par=dk_par)
+
+    rhs_K_par_ = dKpardt(E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]), alpha_c_perp=np.sqrt(2 * f[2]),
+                        n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec.real, dk_perp=dk_perp, dk_par=dk_par)
+
 
     # cold electron temperature
     rhs_T_perp = dTperpdt(E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]), alpha_c_perp=np.sqrt(2 * f[2]),
@@ -143,6 +153,7 @@ if __name__ == "__main__":
     T_par_0 = (alpha_c_par ** 2 / 2)
     k_0 = 1  # d_e
     dB0 = 4 * np.pi * 5e-5  # d_{e}^3 Omega_{ce}^2 m_{e} n_{e}
+    m_star = -1
 
     # max time
     t_max = 300
@@ -158,6 +169,8 @@ if __name__ == "__main__":
     # simulate
     result = scipy.integrate.solve_ivp(fun=dydt, t_span=[0, t_max],
                                        y0=np.concatenate(([K_perp_0], [K_par_0], [T_perp_0], [T_par_0], [dB0], [v_0 ** 2], dE_init)),
-                                       args=(k_perp_, k_par_, omega_pe, omega_pi, k_0, alpha_i, n_c, dk_perp, dk_par, omega_0),
+                                       args=(k_perp_, k_par_, omega_pe, omega_pi, k_0, alpha_i, n_c, dk_perp, dk_par, omega_0, m_star),
                                        atol=1e-5, rtol=1e-5,
                                        method='RK45')
+
+    results = result.y
