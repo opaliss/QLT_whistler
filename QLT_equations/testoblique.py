@@ -91,7 +91,7 @@ def dydt(t, f, k_perp, k_par, omega_pe, omega_pi, k_0, alpha_i, n_c, dk_perp, dk
         ax.spines['top'].set_visible(False)
         plt.grid(alpha=0.5)
         plt.tight_layout()
-        plt.savefig("/Users/oissan/PycharmProjects/QLT_whistler/figs/secondary_QLT/oblique_gamma/t_" + str(round(t)) + ".png", dpi=300, bbox_inches='tight')
+        plt.savefig("/Users/oissan/PycharmProjects/QLT_whistler/figs/secondary_QLT/" + str(folder_name) + "/t_" + str(round(t)) + ".png", dpi=300, bbox_inches='tight')
         plt.close()
 
     # cold electron kinetic energy
