@@ -30,8 +30,9 @@ def get_omega_vec(k_vec, omega_pe, omega_pi, v_0, alpha_i, alpha_perp_c, n_c, om
 
 def dydt(t, f, k_vec, omega_pe, omega_pi, k_0, alpha_i, n_c, dk, omega_0):
     # dispersion solver
-    omega_vec = get_omega_vec(k_vec=k_vec, omega_pe=omega_pe, omega_pi=omega_pi, v_0=np.sqrt(f[2]), omega_0=omega_0,
-                              alpha_i=alpha_i, alpha_perp_c=np.sqrt(2 * f[0] / n_c), n_c=n_c)
+    omega_vec = get_omega_vec(k_vec=k_vec, omega_pe=omega_pe, omega_pi=omega_pi,
+                              v_0=np.sqrt(f[3]), omega_0=omega_0,
+                              alpha_i=alpha_i, alpha_perp_c=np.sqrt(2 * f[1]), n_c=n_c)
 
     fig, ax = plt.subplots(figsize=(6, 3))
     ax.plot(k_vec, omega_vec.imag, linewidth=2)
@@ -47,24 +48,27 @@ def dydt(t, f, k_vec, omega_pe, omega_pi, k_0, alpha_i, n_c, dk, omega_0):
     plt.close()
 
     # cold electron kinetic energy
-    rhs_K = dKdt(omega_pi=omega_pi, alpha_i=alpha_i, E_vec=f[3:], k_vec=k_vec, omega_vec=omega_vec.real, dk=dk,
-                 omega_0=omega_0, v_0=np.sqrt(f[2]))
+    rhs_K = dKdt(omega_pi=omega_pi, alpha_i=alpha_i, E_vec=f[4:], k_vec=k_vec, omega_vec=omega_vec, dk=dk,
+                 omega_0=omega_0, v_0=np.sqrt(f[3]))
+
+    rhs_T = dKdt(omega_pi=omega_pi, alpha_i=alpha_i, E_vec=f[4:], k_vec=k_vec, omega_vec=omega_vec.real, dk=dk,
+                 omega_0=omega_0, v_0=np.sqrt(f[3]))
 
     # electrostatic electric energy
-    rhs_E = dEdt(gamma=omega_vec.imag, E_vec=f[3:])
+    rhs_E = dEdt(gamma=omega_vec.imag, E_vec=f[4:])
 
     # magnetic energy whistler
-    rhs_B = dBdt(omega_pi=omega_pi, alpha_i=alpha_i, E_vec=f[3:], k_vec=k_vec, omega_vec=omega_vec, dk=dk,
+    rhs_B = dBdt(omega_pi=omega_pi, alpha_i=alpha_i, E_vec=f[4:], k_vec=k_vec, omega_vec=omega_vec, dk=dk,
                  omega_pe=omega_pe,
-                 omega_0=omega_0, v_0=np.sqrt(f[2]), k_0=k_0)
+                 omega_0=omega_0, v_0=np.sqrt(f[3]), k_0=k_0)
 
     # drift magnitude of cold electrons
-    rhs_V = dVdt(omega_0=omega_0, k_0=k_0, omega_pi=omega_pi, alpha_i=alpha_i, E_vec=f[3:], k_vec=k_vec,
-                 omega_vec=omega_vec, dk=dk, v_0=np.sqrt(f[2]), omega_pe=omega_pe)
+    rhs_V = dVdt(omega_0=omega_0, k_0=k_0, omega_pi=omega_pi, alpha_i=alpha_i, E_vec=f[4:], k_vec=k_vec,
+                 omega_vec=omega_vec, dk=dk, v_0=np.sqrt(f[3]), omega_pe=omega_pe)
 
     print("t = ", t)
     print("max gamma = ", np.max(omega_vec.imag))
-    return np.concatenate(([rhs_K], [rhs_B], [rhs_V], rhs_E))
+    return np.concatenate(([rhs_K], [rhs_T], [rhs_B], [rhs_V], rhs_E))
 
 
 if __name__ == "__main__":
@@ -86,6 +90,7 @@ if __name__ == "__main__":
     # initial conditions
     E0 = 5e-9
     K0 = (alpha_perp_c ** 2 / 2) * n_c  # + n_c * (v_0**2)
+    T0 = (alpha_perp_c ** 2 / 2)
 
     # k vector
     k_vec = np.linspace(176, 220, 150)
@@ -98,7 +103,7 @@ if __name__ == "__main__":
 
     # simulate
     result = scipy.integrate.solve_ivp(fun=dydt, t_span=[0, t_max],
-                                       y0=np.concatenate(([K0], [dB0], [v_0**2], dE_init)),
+                                       y0=np.concatenate(([K0], [T0], [dB0], [v_0**2], dE_init)),
                                        args=(k_vec, omega_pe, omega_pi, k_0, alpha_i, n_c, dk, omega_0),
                                        atol=1e-10, rtol=1e-10,
                                        method='BDF')

@@ -51,7 +51,9 @@ def get_omega_vec(k_perp, k_par, omega_pe, omega_pi, v_0, alpha_i, alpha_c_perp,
     return omega_vec
 
 
-def dydt(t, f, k_perp, k_par, omega_pe, omega_pi, k_0, alpha_i, n_c, dk_perp, dk_par, omega_0, m_star):
+def dydt(t, f, k_perp, k_par, omega_pe, omega_pi, k_0, alpha_i, n_c, dk_perp, dk_par,
+         omega_0, m_star, ic1, ic2,
+         folder_name="oblique_gamma"):
     """
 
     :param t:
@@ -66,13 +68,19 @@ def dydt(t, f, k_perp, k_par, omega_pe, omega_pi, k_0, alpha_i, n_c, dk_perp, dk
     :param dk_perp:
     :param dk_par:
     :param omega_0:
+    :param m_star:
+    :param ic1:
+    :param ic2:
+    :param folder_name:
     :return:
     """
     # dispersion solver
     omega_vec = get_omega_vec(k_perp=k_perp, k_par=k_par, omega_pe=omega_pe, omega_pi=omega_pi, v_0=np.sqrt(f[5]),
                               alpha_i=alpha_i, alpha_c_perp=np.sqrt(2 * f[2]), alpha_c_par=np.sqrt(2 * f[3]), n_c=n_c,
-                              omega_0=omega_0, m_star=m_star)
-    if os.path.exists("/Users/oissan/PycharmProjects/QLT_whistler/figs/secondary_QLT/oblique_gamma/t_" + str(round(t))+ ".png") is False:
+                              omega_0=omega_0, m_star=m_star, ic1=ic1, ic2=ic2)
+
+    if os.path.exists("/Users/oissan/PycharmProjects/QLT_whistler/figs/secondary_QLT/"
+                      + str(folder_name) + "/t_" + str(round(t))+ ".png") is False:
         fig, ax = plt.subplots(figsize=(6, 3))
         ax.plot(np.sqrt(k_perp**2 + k_par**2), omega_vec.imag, linewidth=2)
         ax.set_ylabel(r"$\gamma/\Omega_{ce}$", rotation=90)
@@ -95,12 +103,12 @@ def dydt(t, f, k_perp, k_par, omega_pe, omega_pi, k_0, alpha_i, n_c, dk_perp, dk
                         n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec, dk_perp=dk_perp, dk_par=dk_par)
 
     rhs_K_perp_ = dKperpdt(E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]),
-                          alpha_c_perp=np.sqrt(2 * f[2]), n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec.real,
-                          dk_perp=dk_perp, dk_par=dk_par)
+                           alpha_c_perp=np.sqrt(2 * f[2]),
+                           n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec.real,
+                           dk_perp=dk_perp, dk_par=dk_par)
 
     rhs_K_par_ = dKpardt(E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]), alpha_c_perp=np.sqrt(2 * f[2]),
-                        n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec.real, dk_perp=dk_perp, dk_par=dk_par)
-
+                         n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec.real, dk_perp=dk_perp, dk_par=dk_par)
 
     # cold electron temperature
     rhs_T_perp = dTperpdt(E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]), alpha_c_perp=np.sqrt(2 * f[2]),
@@ -154,6 +162,8 @@ if __name__ == "__main__":
     k_0 = 1  # d_e
     dB0 = 4 * np.pi * 5e-5  # d_{e}^3 Omega_{ce}^2 m_{e} n_{e}
     m_star = -1
+    ic1 = 0.5 * 0.99 + 1e-3j
+    ic2 = 0.5 * 0.99 + 1e-5j
 
     # max time
     t_max = 300
@@ -169,7 +179,7 @@ if __name__ == "__main__":
     # simulate
     result = scipy.integrate.solve_ivp(fun=dydt, t_span=[0, t_max],
                                        y0=np.concatenate(([K_perp_0], [K_par_0], [T_perp_0], [T_par_0], [dB0], [v_0 ** 2], dE_init)),
-                                       args=(k_perp_, k_par_, omega_pe, omega_pi, k_0, alpha_i, n_c, dk_perp, dk_par, omega_0, m_star),
+                                       args=(k_perp_, k_par_, omega_pe, omega_pi, k_0, alpha_i, n_c, dk_perp, dk_par, omega_0, m_star, ic1, ic2),
                                        atol=1e-5, rtol=1e-5,
                                        method='RK45')
 
