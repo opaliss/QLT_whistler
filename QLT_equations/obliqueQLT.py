@@ -17,7 +17,7 @@ from QLT_equations.general_plasma_equations import I, J, Z_prime, Z
 from QLT_equations.perpQLT import dEdt
 
 
-def sum_bessel(lambda_, omega, k_par, alpha_c_par, n_max=50, n_factor=0, include_Z=True):
+def sum_bessel(lambda_, omega, k_par, alpha_c_par, n_max=20, n_factor=0, include_Z=True):
     """sum of Bessel functions
 
     :param lambda_: float or 1d array, argument of the modified Bessel function
@@ -166,23 +166,29 @@ def dKpardt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, n_c, k_par, k_perp, omeg
     for ii in range(len(k_par)):
         k2 = k_perp[ii] ** 2 + k_par[ii] ** 2
         lambda_ = 0.5 * ((k_perp[ii] * alpha_c_perp) ** 2)
-        term_1 = (omega_vec[ii] ** 2 / alpha_c_par / k_par[ii]) * sum_bessel(lambda_=lambda_, omega=omega_vec[ii],
-                                                                             k_par=k_par[ii], alpha_c_par=alpha_c_par,
+        term_1 = (omega_vec[ii] ** 2 / alpha_c_par / k_par[ii]) * sum_bessel(lambda_=lambda_,
+                                                                             omega=omega_vec[ii],
+                                                                             k_par=k_par[ii],
+                                                                             alpha_c_par=alpha_c_par,
                                                                              n_factor=0)
+
         term_2 = (omega_vec[ii] * (anisotropy_term - 1) / k_par[ii] / alpha_c_par) * sum_bessel(lambda_=lambda_,
                                                                                                 omega=omega_vec[ii],
                                                                                                 k_par=k_par[ii],
                                                                                                 alpha_c_par=alpha_c_par,
                                                                                                 n_factor=1)
-        term_3 = (-anisotropy_term / k_par[ii] / alpha_c_par) * sum_bessel(lambda_=lambda_, omega=omega_vec[ii],
-                                                                           k_par=k_par[ii], alpha_c_par=alpha_c_par,
+        term_3 = (-anisotropy_term / k_par[ii] / alpha_c_par) * sum_bessel(lambda_=lambda_,
+                                                                           omega=omega_vec[ii],
+                                                                           k_par=k_par[ii],
+                                                                           alpha_c_par=alpha_c_par,
                                                                            n_factor=2)
+
         sol[ii] = (E_vec[ii] / k2) * (omega_vec[ii] + term_1 + term_2 + term_3).imag
     return n_c / np.pi * (omega_pe ** 2) / (alpha_c_par ** 2) * np.sum(sol) * dk_perp * dk_par
 
 
 def dTperpdt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, k_par, k_perp, omega_vec, dk_perp,
-             dk_par, n_max=50):
+             dk_par, n_max=10):
     """
 
     :param n_max:
@@ -214,7 +220,7 @@ def dTperpdt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, k_par, k_perp, omega_ve
 
 
 def dTpardt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, k_par, k_perp, omega_vec, dk_perp,
-            dk_par, n_max=5):
+            dk_par, n_max=10):
     """
 
     :param E_vec:

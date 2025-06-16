@@ -46,13 +46,15 @@ def get_omega_vec(k_perp, k_par, omega_pe, omega_pi, v_0, alpha_i, alpha_c_perp,
             except:
                 print("|k| = ", str(np.sqrt(k_par[ii]**2 + k_perp[ii]**2)))
 
-        if omega_vec[ii].imag < 0:
-            omega_vec[ii] = omega_vec[ii].real
+        if np.abs(omega_vec[ii].imag) > 0.01:
+            omega_vec[ii] = 0.5
+        if np.abs(omega_vec[ii].imag) < -0.01:
+            omega_vec[ii] = 0.5
     return omega_vec
 
 
 def dydt(t, f, k_perp, k_par, omega_pe, omega_pi, k_0, alpha_i, n_c, dk_perp, dk_par,
-         omega_0, m_star, ic1, ic2, folder_name="oblique_gamma"):
+         omega_0, m_star, ic1, ic2, folder_name="oblique_gamma", plot_=False):
     """
 
     :param t:
@@ -73,25 +75,43 @@ def dydt(t, f, k_perp, k_par, omega_pe, omega_pi, k_0, alpha_i, n_c, dk_perp, dk
     :param folder_name:
     :return:
     """
+    if len(np.where(f[6:] < 0)) > 1:
+        # check where dE becomes negative
+        print("negative dE was found")
+        f[6:][np.where(f[6:] < 0)] = np.zeros(len(np.where(f[6:] < 0)))
+
+
     # dispersion solver
     omega_vec = get_omega_vec(k_perp=k_perp, k_par=k_par, omega_pe=omega_pe, omega_pi=omega_pi, v_0=np.sqrt(f[5]),
                               alpha_i=alpha_i, alpha_c_perp=np.sqrt(2 * f[2]), alpha_c_par=np.sqrt(2 * f[3]), n_c=n_c,
                               omega_0=omega_0, m_star=m_star, ic1=ic1, ic2=ic2)
 
-    if os.path.exists("/Users/oissan/PycharmProjects/QLT_whistler/figs/secondary_QLT/"
-                      + str(folder_name) + "/t_" + str(round(t))+ ".png") is False:
-        fig, ax = plt.subplots(figsize=(6, 3))
-        ax.plot(np.sqrt(k_perp**2 + k_par**2), omega_vec.imag, linewidth=2)
-        ax.set_ylabel(r"$\gamma/|\Omega_{ce}|$", rotation=90)
-        ax.set_xlabel(r"$|\vec{k}|d_{e}$")
-        ax.set_ylim(-0.012, 0.012)
-        ax.set_title("$t = $" + str(round(t)))
-        ax.spines['right'].set_visible(False)
-        ax.spines['top'].set_visible(False)
-        plt.grid(alpha=0.5)
-        plt.tight_layout()
-        plt.savefig("/Users/oissan/PycharmProjects/QLT_whistler/figs/secondary_QLT/" + str(folder_name) + "/t_" + str(round(t)) + ".png", dpi=300, bbox_inches='tight')
-        plt.close()
+    if plot_:
+        if os.path.exists("/Users/oissan/PycharmProjects/QLT_whistler/figs/secondary_QLT/"
+                          + str(folder_name) + "/t_" + str(round(t))+ ".png") is False:
+            fig, ax = plt.subplots(figsize=(6, 3))
+            ax.scatter(np.sqrt(k_perp**2 + k_par**2), omega_vec.imag, linewidth=2)
+            ax.set_ylabel(r"$\gamma/|\Omega_{ce}|$", rotation=90)
+            ax.set_xlabel(r"$|\vec{k}|d_{e}$")
+            ax.set_title("$t = $" + str(round(t)))
+            ax.spines['right'].set_visible(False)
+            ax.spines['top'].set_visible(False)
+            plt.grid(alpha=0.5)
+            plt.tight_layout()
+            plt.savefig("/Users/oissan/PycharmProjects/QLT_whistler/figs/secondary_QLT/" + str(folder_name) + "/t_" + str(round(t)) + "_imag.png", dpi=300, bbox_inches='tight')
+            plt.close()
+
+            fig, ax = plt.subplots(figsize=(6, 3))
+            ax.scatter(np.sqrt(k_perp**2 + k_par**2), omega_vec.real, linewidth=2)
+            ax.set_ylabel(r"$\gamma/|\Omega_{ce}|$", rotation=90)
+            ax.set_xlabel(r"$|\vec{k}|d_{e}$")
+            ax.set_title("$t = $" + str(round(t)))
+            ax.spines['right'].set_visible(False)
+            ax.spines['top'].set_visible(False)
+            plt.grid(alpha=0.5)
+            plt.tight_layout()
+            plt.savefig("/Users/oissan/PycharmProjects/QLT_whistler/figs/secondary_QLT/" + str(folder_name) + "/t_" + str(round(t)) + "_real.png", dpi=300, bbox_inches='tight')
+            plt.close()
 
     # cold electron kinetic energy
     rhs_K_perp = dKperpdt(E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]),
@@ -101,6 +121,14 @@ def dydt(t, f, k_perp, k_par, omega_pe, omega_pi, k_0, alpha_i, n_c, dk_perp, dk
     rhs_K_par = dKpardt(E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]), alpha_c_perp=np.sqrt(2 * f[2]),
                         n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec, dk_perp=dk_perp, dk_par=dk_par)
 
+
+    # rhs_K_perp_ = dKperpdt(E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]),
+    #                       alpha_c_perp=np.sqrt(2 * f[2]), n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec.real,
+    #                       dk_perp=dk_perp, dk_par=dk_par)
+    #
+    # rhs_K_par_ = dKpardt(E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]), alpha_c_perp=np.sqrt(2 * f[2]),
+    #                     n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec.real, dk_perp=dk_perp, dk_par=dk_par)
+
     # cold electron temperature
     rhs_T_perp = dTperpdt(E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]), alpha_c_perp=np.sqrt(2 * f[2]),
                           k_par=k_par, k_perp=k_perp, omega_vec=omega_vec, dk_perp=dk_perp, dk_par=dk_par)
@@ -109,9 +137,12 @@ def dydt(t, f, k_perp, k_par, omega_pe, omega_pi, k_0, alpha_i, n_c, dk_perp, dk
                         k_par=k_par, k_perp=k_perp, omega_vec=omega_vec, dk_perp=dk_perp, dk_par=dk_par)
 
     # magnetic energy whistler
-    rhs_B = dBdt(omega_0=omega_0, k_0=k_0, E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]),
+    rhs_B = dBdt(omega_0=omega_0, k_0=k_0,
+                 E_vec=f[6:], omega_pe=omega_pe,
+                 alpha_c_par=np.sqrt(2 * f[3]),
                  alpha_c_perp=np.sqrt(2 * f[2]),
-                 n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec, dk_perp=dk_perp, dk_par=dk_par)
+                 n_c=n_c, k_par=k_par, k_perp=k_perp,
+                 omega_vec=omega_vec, dk_perp=dk_perp, dk_par=dk_par)
 
     # drift magnitude of cold electrons
     rhs_V = dVdt(omega_0=omega_0, k_0=k_0, E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]),
@@ -146,20 +177,21 @@ if __name__ == "__main__":
 
     # initial conditions
     E0 = 1e-9
-    K_perp_0 = (alpha_c_perp ** 2 / 2) * n_c
-    K_par_0 = (alpha_c_perp ** 2 / 2) * n_c
-    T_perp_0 = (alpha_c_perp ** 2 / 2)
-    T_par_0 = (alpha_c_par ** 2 / 2)
+    K_perp_0 = ((alpha_c_perp ** 2) / 2) * n_c
+    K_par_0 = ((alpha_c_par ** 2) / 2) * n_c
+    T_perp_0 = ((alpha_c_perp ** 2) / 2)
+    T_par_0 = ((alpha_c_par ** 2) / 2)
     k_0 = 1  # d_e
-    dB0 = 4 * np.pi * 5e-5  # d_{e}^3 Omega_{ce}^2 m_{e} n_{e}
+    dB0 = 4 * np.pi * 2.5 * 1e-5  # d_{e}^3 Omega_{ce}^2 m_{e} n_{e}
+
     m_star = -1
     ic1 = 0.5 * 0.99 + 1e-3j
     ic2 = 0.5 * 0.99 + 1e-5j
 
     # max time
-    t_max = 300
+    t_max = 600
 
-    k_perp_ = np.linspace(6, 60, 120)
+    k_perp_ = np.linspace(10, 50, 50)
     k_par_ = np.sqrt((omega_0 ** 2) / (1 - omega_0 ** 2)) * k_perp_
     sol_ = np.zeros((len(k_perp_)), dtype="complex128")
     k_abs = np.zeros((len(k_perp_)))
@@ -170,8 +202,10 @@ if __name__ == "__main__":
     # simulate
     result = scipy.integrate.solve_ivp(fun=dydt, t_span=[0, t_max],
                                        y0=np.concatenate(([K_perp_0], [K_par_0], [T_perp_0], [T_par_0], [dB0], [v_0 ** 2], dE_init)),
-                                       args=(k_perp_, k_par_, omega_pe, omega_pi, k_0, alpha_i, n_c, dk_perp, dk_par, omega_0, m_star, ic1, ic2),
-                                       atol=1e-5, rtol=1e-5,
-                                       method='RK45')
+                                       args=(k_perp_, k_par_, omega_pe, omega_pi, k_0, alpha_i, n_c, dk_perp, dk_par,
+                                             omega_0, m_star, ic1, ic2, "oblique_gamma", False),
+                                       atol=1e-9, rtol=1e-9,
+                                       method='Radau')
 
-    results = result.y
+    np.save("oblique_y.npy", result.y)
+    np.save("oblique_t.npy", result.t)

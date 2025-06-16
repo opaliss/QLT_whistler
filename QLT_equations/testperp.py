@@ -36,8 +36,11 @@ def get_omega_vec(k_vec, omega_pe, omega_pi, v_0, alpha_i, alpha_perp_c, n_c, om
                                                                           alpha_perp_c=alpha_perp_c, n_c=n_c),
                                                                           x0=ic2, tol=tol)
             except:
+                omega_vec[ii] = 0
                 print("k|_", str(kk))
+
         if omega_vec[ii].imag < 0:
+            print("negative val", kk)
             omega_vec[ii] = omega_vec[ii].real
     return omega_vec
 
@@ -60,8 +63,8 @@ def dydt(t, f, k_vec, omega_pe, omega_pi, k_0, alpha_i, n_c, dk, omega_0, folder
     """
     # dispersion solver
     omega_vec = get_omega_vec(k_vec=k_vec, omega_pe=omega_pe, omega_pi=omega_pi,
-                              v_0=np.sqrt(f[3]), omega_0=omega_0,
-                              alpha_i=alpha_i, alpha_perp_c=np.sqrt(2 * f[1]), n_c=n_c)
+                              v_0=np.sqrt(f[3]), omega_0=omega_0, alpha_i=alpha_i,
+                              alpha_perp_c=np.sqrt(2 * f[1]), n_c=n_c)
 
     if os.path.exists("/Users/oissan/PycharmProjects/QLT_whistler/figs/secondary_QLT/"
                       + str(folder_name) + "/t_" + str(round(t)) + ".png") is False:
