@@ -137,8 +137,7 @@ def dydt(t, f, k_perp, k_par, omega_pe, omega_pi, k_0, alpha_i, n_c, dk_perp, dk
                         k_par=k_par, k_perp=k_perp, omega_vec=omega_vec, dk_perp=dk_perp, dk_par=dk_par)
 
     # magnetic energy whistler
-    rhs_B = dBdt(omega_0=omega_0, k_0=k_0,
-                 E_vec=f[6:], omega_pe=omega_pe,
+    rhs_B = dBdt(E_vec=f[6:], omega_pe=omega_pe,
                  alpha_c_par=np.sqrt(2 * f[3]),
                  alpha_c_perp=np.sqrt(2 * f[2]),
                  n_c=n_c, k_par=k_par, k_perp=k_perp,

@@ -1,5 +1,5 @@
 """Module with QLT equations describing the oblique electrostatic
-secondary_waves instability (oblique whistler)
+ secondary waves instability (oblique whistler)
 
 References
 ----------
@@ -7,7 +7,7 @@ V. Roytershteyn and G. L. Delzanno.
 Nonlinear coupling of whistler waves to oblique electrostatic turbulence enabled by cold plasma.
 Physics of Plasmas, 28(4):042903, 04 2021.
 
-Last modified: May 25th, 2025
+Last modified: July 11th, 2025
 
 Author: Opal Issan (oissan@ucsd.edu)
 """
@@ -124,7 +124,7 @@ def dKperpdt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, n_c, k_par, k_perp, ome
     :param n_c: float, cold plasma density
     :param k_perp: float or 1d array, perpendicular wavenumber
     :param k_par: float or 1d array, parallel wavenumber
-    :return:
+    :return: dKperpdt
     """
     sol = np.zeros(len(k_par))
     anisotropy_term = (alpha_c_par / alpha_c_perp) ** 2 - 1
@@ -143,7 +143,7 @@ def dKperpdt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, n_c, k_par, k_perp, ome
                                                                               n_factor=2)
         sol[ii] = E_vec[ii] / k2 * (term_1 + term_2).imag
 
-    return n_c / 2 / np.pi * (omega_pe ** 2) / (alpha_c_par ** 2) * np.sum(sol) * dk_perp * dk_par
+    return 2 * n_c / np.pi * (omega_pe ** 2) / (alpha_c_par ** 2) * np.sum(sol) * dk_perp * dk_par
 
 
 def dKpardt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, n_c, k_par, k_perp, omega_vec, dk_perp, dk_par):
@@ -159,7 +159,7 @@ def dKpardt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, n_c, k_par, k_perp, omeg
     :param omega_vec: float or 1d array, frequency
     :param k_perp: float or 1d array, perpendicular wavenumber
     :param k_par: float or 1d array, parallel wavenumber
-    :return:
+    :return: dKpardt
     """
     sol = np.zeros(len(k_par))
     anisotropy_term = (alpha_c_par / alpha_c_perp) ** 2 - 1
@@ -184,7 +184,7 @@ def dKpardt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, n_c, k_par, k_perp, omeg
                                                                            n_factor=2)
 
         sol[ii] = (E_vec[ii] / k2) * (omega_vec[ii] + term_1 + term_2 + term_3).imag
-    return n_c / np.pi * (omega_pe ** 2) / (alpha_c_par ** 2) * np.sum(sol) * dk_perp * dk_par
+    return 4 * n_c / np.pi * (omega_pe ** 2) / (alpha_c_par ** 2) * np.sum(sol) * dk_perp * dk_par
 
 
 def dTperpdt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, k_par, k_perp, omega_vec, dk_perp,
@@ -201,7 +201,7 @@ def dTperpdt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, k_par, k_perp, omega_ve
     :param omega_vec:
     :param dk_perp:
     :param dk_par:
-    :return:
+    :return: dTperpdt
     """
     sol = np.zeros(len(k_par))
     anisotropy_term = (alpha_c_par / alpha_c_perp) ** 2 - 1
@@ -216,7 +216,7 @@ def dTperpdt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, k_par, k_perp, omega_ve
             add = n * I(Lambda=lambda_, m=n) * (xi_0 + n / k_par[ii] / alpha_c_par * anisotropy_term)
             term_1 += add * exp
         sol[ii] = E_vec[ii] / k2 * term_1
-    return 0.5 * (omega_pe ** 2) / (alpha_c_par ** 2) / np.sqrt(np.pi) * np.sum(sol) * dk_par * dk_perp
+    return 2 * (omega_pe ** 2) / (alpha_c_par ** 2) / np.sqrt(np.pi) * np.sum(sol) * dk_par * dk_perp
 
 
 def dTpardt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, k_par, k_perp, omega_vec, dk_perp,
@@ -233,7 +233,7 @@ def dTpardt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, k_par, k_perp, omega_vec
     :param dk_perp:
     :param dk_par:
     :param n_max:
-    :return:
+    :return: dTpardt
     """
     sol = np.zeros(len(k_par))
     anisotropy_term = (alpha_c_par / alpha_c_perp) ** 2 - 1
@@ -246,10 +246,10 @@ def dTpardt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, k_par, k_perp, omega_vec
             exp = np.exp(-xi_n ** 2)
             term_1 += I(Lambda=lambda_, m=n) * (omega_vec[ii].real + n * anisotropy_term) * xi_n * exp
         sol[ii] = E_vec[ii] / k2 * term_1
-    return (omega_pe ** 2) / (alpha_c_par ** 2) / np.sqrt(np.pi) * np.sum(sol) * dk_par * dk_perp
+    return 4 * (omega_pe ** 2) / (alpha_c_par ** 2) / np.sqrt(np.pi) * np.sum(sol) * dk_par * dk_perp
 
 
-def dBdt(omega_0, k_0, E_vec, omega_pe, alpha_c_par, alpha_c_perp,
+def dBdt(E_vec, omega_pe, alpha_c_par, alpha_c_perp,
          n_c, k_par, k_perp, omega_vec, dk_perp, dk_par):
     """
 
@@ -267,14 +267,12 @@ def dBdt(omega_0, k_0, E_vec, omega_pe, alpha_c_par, alpha_c_perp,
     :param dk_par:
     :return:
     """
-    const = 1 + (omega_0 ** 2) / ((k_0 ** 2) * (omega_pe ** 2))
     dK_perp_dt = dKperpdt(E_vec=E_vec, omega_pe=omega_pe, alpha_c_par=alpha_c_par, alpha_c_perp=alpha_c_perp,
-                          n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec, dk_perp=dk_perp,
-                          dk_par=dk_par)
+                          n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec, dk_perp=dk_perp, dk_par=dk_par)
     dK_par_dt = dKpardt(E_vec=E_vec, omega_pe=omega_pe, alpha_c_par=alpha_c_par, alpha_c_perp=alpha_c_perp,
                         n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec, dk_perp=dk_perp, dk_par=dk_par)
     dE_dt = np.sum(dEdt(gamma=omega_vec.imag, E_vec=E_vec)) * dk_par * dk_perp
-    return 4 * np.pi / const * (-dK_perp_dt - 0.5 * dK_par_dt - 1 / np.pi / 2 * dE_dt)
+    return - 8 * np.pi * (dK_perp_dt + 0.5 * dK_par_dt + 1 / np.pi * dE_dt)
 
 
 def dVdt(omega_0, k_0, E_vec, omega_pe, alpha_c_par, alpha_c_perp,
@@ -293,9 +291,8 @@ def dVdt(omega_0, k_0, E_vec, omega_pe, alpha_c_par, alpha_c_perp,
     :param omega_vec:
     :param dk_perp:
     :param dk_par:
-    :return:
+    :return: dVdt
     """
     const = 1 / 4 / np.pi * ((omega_0 / k_0 / (omega_0 - 1)) ** 2)
-    return const * dBdt(omega_0=omega_0, k_0=k_0, E_vec=E_vec, omega_pe=omega_pe, alpha_c_par=alpha_c_par,
-                        alpha_c_perp=alpha_c_perp, n_c=n_c, k_par=k_par,
-                        k_perp=k_perp, omega_vec=omega_vec, dk_perp=dk_perp, dk_par=dk_par)
+    return const * dBdt(E_vec=E_vec, omega_pe=omega_pe, alpha_c_par=alpha_c_par, alpha_c_perp=alpha_c_perp,
+                        n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec, dk_perp=dk_perp, dk_par=dk_par)
