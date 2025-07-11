@@ -10,7 +10,6 @@ from scipy.special import wofz
 import scipy
 
 
-
 def Z(z):
     """plasma dispersion function Z(z)
 
@@ -47,4 +46,3 @@ def J(Lambda, m):
     :return: J_{m}(Lambda)
     """
     return scipy.special.jv(m, Lambda)
-

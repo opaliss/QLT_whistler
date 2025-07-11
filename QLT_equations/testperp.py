@@ -12,6 +12,9 @@ def get_omega_vec(k_vec, omega_pe, omega_pi, v_0, alpha_i, alpha_perp_c, n_c, om
                   ic1=1.5 + 1E-3j, ic2=1. + 1E-4j, tol=1e-15):
     """
 
+    :param tol:
+    :param ic2:
+    :param ic1:
     :param k_vec:
     :param omega_pe:
     :param omega_pi:
@@ -28,20 +31,19 @@ def get_omega_vec(k_vec, omega_pe, omega_pi, v_0, alpha_i, alpha_perp_c, n_c, om
             omega_vec[ii] = scipy.optimize.newton(dispersion_relation(k_perp=kk, omega_pe=omega_pe, omega_0=omega_0,
                                                                       omega_pi=omega_pi, v_0=v_0, alpha_i=alpha_i,
                                                                       alpha_perp_c=alpha_perp_c, n_c=n_c),
-                                                                      x0=ic1, tol=tol)
+                                                  x0=ic1, tol=tol)
         except:
             try:
                 omega_vec[ii] = scipy.optimize.newton(dispersion_relation(k_perp=kk, omega_pe=omega_pe, omega_0=omega_0,
                                                                           omega_pi=omega_pi, v_0=v_0, alpha_i=alpha_i,
                                                                           alpha_perp_c=alpha_perp_c, n_c=n_c),
-                                                                          x0=ic2, tol=tol)
+                                                      x0=ic2, tol=tol)
             except:
                 omega_vec[ii] = 0
                 print("k|_", str(kk))
 
         if omega_vec[ii].imag < 0:
             print("negative val", kk)
-            omega_vec[ii] = omega_vec[ii].real
     return omega_vec
 
 
@@ -79,7 +81,8 @@ def dydt(t, f, k_vec, omega_pe, omega_pi, k_0, alpha_i, n_c, dk, omega_0, folder
         ax.spines['top'].set_visible(False)
         plt.grid(alpha=0.3)
         plt.tight_layout()
-        plt.savefig("/Users/oissan/PycharmProjects/QLT_whistler/figs/secondary_QLT/" + str(folder_name) + "/t_" + str(round(t)) + ".png", dpi=300, bbox_inches='tight')
+        plt.savefig("/Users/oissan/PycharmProjects/QLT_whistler/figs/secondary_QLT/" + str(folder_name) + "/t_" + str(
+            round(t)) + ".png", dpi=300, bbox_inches='tight')
         plt.close()
 
     # cold electron kinetic energy
@@ -87,7 +90,7 @@ def dydt(t, f, k_vec, omega_pe, omega_pi, k_0, alpha_i, n_c, dk, omega_0, folder
                  omega_0=omega_0, v_0=np.sqrt(f[3]))
 
     rhs_T = dKdt(omega_pi=omega_pi, alpha_i=alpha_i, E_vec=f[4:], k_vec=k_vec, omega_vec=omega_vec.real, dk=dk,
-                 omega_0=omega_0, v_0=np.sqrt(f[3]))
+                 omega_0=omega_0, v_0=np.sqrt(f[3])) / n_c
 
     # electrostatic electric energy
     rhs_E = dEdt(gamma=omega_vec.imag, E_vec=f[4:])
@@ -138,7 +141,7 @@ if __name__ == "__main__":
 
     # simulate
     result = scipy.integrate.solve_ivp(fun=dydt, t_span=[0, t_max],
-                                       y0=np.concatenate(([K0], [T0], [dB0], [v_0**2], dE_init)),
+                                       y0=np.concatenate(([K0], [T0], [dB0], [v_0 ** 2], dE_init)),
                                        args=(k_vec, omega_pe, omega_pi, k_0, alpha_i, n_c, dk, omega_0),
                                        atol=1e-10, rtol=1e-10,
                                        method='BDF')

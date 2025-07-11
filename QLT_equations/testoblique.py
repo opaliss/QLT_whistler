@@ -46,10 +46,10 @@ def get_omega_vec(k_perp, k_par, omega_pe, omega_pi, v_0, alpha_i, alpha_c_perp,
             except:
                 print("|k| = ", str(np.sqrt(k_par[ii]**2 + k_perp[ii]**2)))
 
-        if np.abs(omega_vec[ii].imag) > 0.01:
-            omega_vec[ii] = 0.5
-        if np.abs(omega_vec[ii].imag) < -0.01:
-            omega_vec[ii] = 0.5
+        if np.abs(omega_vec[ii].imag) > 0.0137:
+            omega_vec[ii] = omega_vec[ii].real
+        if omega_vec[ii].imag < 0:
+            omega_vec[ii] = omega_vec[ii].real
     return omega_vec
 
 
@@ -103,7 +103,7 @@ def dydt(t, f, k_perp, k_par, omega_pe, omega_pi, k_0, alpha_i, n_c, dk_perp, dk
 
             fig, ax = plt.subplots(figsize=(6, 3))
             ax.scatter(np.sqrt(k_perp**2 + k_par**2), omega_vec.real, linewidth=2)
-            ax.set_ylabel(r"$\gamma/|\Omega_{ce}|$", rotation=90)
+            ax.set_ylabel(r"$\omega_{r}/|\Omega_{ce}|$", rotation=90)
             ax.set_xlabel(r"$|\vec{k}|d_{e}$")
             ax.set_title("$t = $" + str(round(t)))
             ax.spines['right'].set_visible(False)

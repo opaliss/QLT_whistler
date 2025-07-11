@@ -114,16 +114,16 @@ def dispersion_relation(k_perp, k_par, omega_pe, omega_pi, omega_0, v_0, alpha_i
 def dKperpdt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, n_c, k_par, k_perp, omega_vec, dk_perp, dk_par):
     """
 
-    :param dk_par:
-    :param omega_vec:
-    :param alpha_c_perp:
-    :param dk_perp:
-    :param E_vec:
-    :param omega_pe:
-    :param alpha_c_par:
-    :param n_c:
-    :param k_par:
-    :param k_perp:
+    :param dk_par: float, spacing in parallel wavenumber
+    :param dk_perp: float, spacing in perpendicular wavenumber
+    :param omega_vec: float or 1d array, frequency
+    :param alpha_c_perp:  float, sqrt(2T_{\perp c}/m_{e})
+    :param alpha_c_par: float, sqrt(2T_{\| c}/m_{e})
+    :param E_vec: float or 1d array, psd of electric field
+    :param omega_pe: float, plasma frequency
+    :param n_c: float, cold plasma density
+    :param k_perp: float or 1d array, perpendicular wavenumber
+    :param k_par: float or 1d array, parallel wavenumber
     :return:
     """
     sol = np.zeros(len(k_par))
@@ -149,16 +149,16 @@ def dKperpdt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, n_c, k_par, k_perp, ome
 def dKpardt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, n_c, k_par, k_perp, omega_vec, dk_perp, dk_par):
     """
 
-    :param E_vec:
-    :param omega_pe:
-    :param alpha_c_par:
-    :param alpha_c_perp:
-    :param n_c:
-    :param k_par:
-    :param k_perp:
-    :param omega_vec:
-    :param dk_perp:
-    :param dk_par:
+    :param E_vec: float or 1d array, psd of electric field
+    :param omega_pe: float, plasma frequency
+    :param alpha_c_perp:  float, sqrt(2T_{\perp c}/m_{e})
+    :param alpha_c_par: float, sqrt(2T_{\| c}/m_{e})
+    :param n_c: float, cold plasma density
+    :param dk_par: float, spacing in parallel wavenumber
+    :param dk_perp: float, spacing in perpendicular wavenumber
+    :param omega_vec: float or 1d array, frequency
+    :param k_perp: float or 1d array, perpendicular wavenumber
+    :param k_par: float or 1d array, parallel wavenumber
     :return:
     """
     sol = np.zeros(len(k_par))
