@@ -97,12 +97,11 @@ def dydt(t, f, k_vec, omega_pe, omega_pi, k_0, alpha_i, n_c, dk, omega_0, folder
 
     # magnetic energy whistler
     rhs_B = dBdt(omega_pi=omega_pi, alpha_i=alpha_i, E_vec=f[4:], k_vec=k_vec, omega_vec=omega_vec, dk=dk,
-                 omega_pe=omega_pe,
-                 omega_0=omega_0, v_0=np.sqrt(f[3]), k_0=k_0)
+                 omega_0=omega_0, v_0=np.sqrt(f[3]))
 
     # drift magnitude of cold electrons
     rhs_V = dVdt(omega_0=omega_0, k_0=k_0, omega_pi=omega_pi, alpha_i=alpha_i, E_vec=f[4:], k_vec=k_vec,
-                 omega_vec=omega_vec, dk=dk, v_0=np.sqrt(f[3]), omega_pe=omega_pe)
+                 omega_vec=omega_vec, dk=dk, v_0=np.sqrt(f[3]))
 
     print("t = ", t)
     print("max gamma = ", np.max(omega_vec.imag))

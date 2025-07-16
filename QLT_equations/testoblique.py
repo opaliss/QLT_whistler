@@ -46,14 +46,14 @@ def get_omega_vec(k_perp, k_par, omega_pe, omega_pi, v_0, alpha_i, alpha_c_perp,
             except:
                 print("|k| = ", str(np.sqrt(k_par[ii]**2 + k_perp[ii]**2)))
 
-        if np.abs(omega_vec[ii].imag) > 0.0137:
+        if np.abs(omega_vec[ii].imag) > 0.011:
             omega_vec[ii] = omega_vec[ii].real
-        if omega_vec[ii].imag < 0:
+        if omega_vec[ii].imag < -0.01:
             omega_vec[ii] = omega_vec[ii].real
     return omega_vec
 
 
-def dydt(t, f, k_perp, k_par, omega_pe, omega_pi, k_0, alpha_i, n_c, dk_perp, dk_par,
+def dydt(t, f, k_perp, k_par, omega_pe, omega_pi, k_0, alpha_i, n_c, dk,
          omega_0, m_star, ic1, ic2, folder_name="oblique_gamma", plot_=False):
     """
 
@@ -66,8 +66,7 @@ def dydt(t, f, k_perp, k_par, omega_pe, omega_pi, k_0, alpha_i, n_c, dk_perp, dk
     :param k_0:
     :param alpha_i:
     :param n_c:
-    :param dk_perp:
-    :param dk_par:
+    :param dk:
     :param omega_0:
     :param m_star:
     :param ic1:
@@ -116,37 +115,29 @@ def dydt(t, f, k_perp, k_par, omega_pe, omega_pi, k_0, alpha_i, n_c, dk_perp, dk
     # cold electron kinetic energy
     rhs_K_perp = dKperpdt(E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]),
                           alpha_c_perp=np.sqrt(2 * f[2]), n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec,
-                          dk_perp=dk_perp, dk_par=dk_par)
+                          dk=dk)
 
     rhs_K_par = dKpardt(E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]), alpha_c_perp=np.sqrt(2 * f[2]),
-                        n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec, dk_perp=dk_perp, dk_par=dk_par)
-
-
-    # rhs_K_perp_ = dKperpdt(E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]),
-    #                       alpha_c_perp=np.sqrt(2 * f[2]), n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec.real,
-    #                       dk_perp=dk_perp, dk_par=dk_par)
-    #
-    # rhs_K_par_ = dKpardt(E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]), alpha_c_perp=np.sqrt(2 * f[2]),
-    #                     n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec.real, dk_perp=dk_perp, dk_par=dk_par)
+                        n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec, dk=dk)
 
     # cold electron temperature
     rhs_T_perp = dTperpdt(E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]), alpha_c_perp=np.sqrt(2 * f[2]),
-                          k_par=k_par, k_perp=k_perp, omega_vec=omega_vec, dk_perp=dk_perp, dk_par=dk_par)
+                          k_par=k_par, k_perp=k_perp, omega_vec=omega_vec, dk=dk)
 
     rhs_T_par = dTpardt(E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]), alpha_c_perp=np.sqrt(2 * f[2]),
-                        k_par=k_par, k_perp=k_perp, omega_vec=omega_vec, dk_perp=dk_perp, dk_par=dk_par)
+                        k_par=k_par, k_perp=k_perp, omega_vec=omega_vec, dk=dk)
 
     # magnetic energy whistler
     rhs_B = dBdt(E_vec=f[6:], omega_pe=omega_pe,
                  alpha_c_par=np.sqrt(2 * f[3]),
                  alpha_c_perp=np.sqrt(2 * f[2]),
                  n_c=n_c, k_par=k_par, k_perp=k_perp,
-                 omega_vec=omega_vec, dk_perp=dk_perp, dk_par=dk_par)
+                 omega_vec=omega_vec, dk=dk)
 
     # drift magnitude of cold electrons
     rhs_V = dVdt(omega_0=omega_0, k_0=k_0, E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]),
                  alpha_c_perp=np.sqrt(2 * f[2]), n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec,
-                 dk_perp=dk_perp, dk_par=dk_par)
+                 dk=dk)
 
     # electrostatic electric energy
     rhs_E = dEdt(gamma=omega_vec.imag, E_vec=f[6:])
@@ -196,12 +187,13 @@ if __name__ == "__main__":
     k_abs = np.zeros((len(k_perp_)))
     dk_perp = np.abs(k_perp_[1] - k_perp_[0])
     dk_par = np.abs(k_par_[1] - k_par_[0])
+    dk_abs = np.abs(k_abs[1] - k_abs[0])
     dE_init = E0 * np.ones(len(k_perp_))
 
     # simulate
     result = scipy.integrate.solve_ivp(fun=dydt, t_span=[0, t_max],
                                        y0=np.concatenate(([K_perp_0], [K_par_0], [T_perp_0], [T_par_0], [dB0], [v_0 ** 2], dE_init)),
-                                       args=(k_perp_, k_par_, omega_pe, omega_pi, k_0, alpha_i, n_c, dk_perp, dk_par,
+                                       args=(k_perp_, k_par_, omega_pe, omega_pi, k_0, alpha_i, n_c, dk_abs,
                                              omega_0, m_star, ic1, ic2, "oblique_gamma", False),
                                        atol=1e-9, rtol=1e-9,
                                        method='Radau')
