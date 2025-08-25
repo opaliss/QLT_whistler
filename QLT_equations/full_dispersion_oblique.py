@@ -16,7 +16,21 @@ import numpy as np
 
 
 def THETA(omega_pi_, alpha_i_, n, M, ky, v_0_, omega_0_, omega, kz, m_max=20):
-    # magnitude of the wavevector
+    """
+
+    :param omega_pi_: float, ion plasma frequency
+    :param alpha_i_: float, ion thermal speed with factor sqrt(2) included
+    :param n: int, sidebands integer
+    :param M: int, sidebands integer
+    :param ky: float, perpendicular wavenumber
+    :param v_0_: float, cold electron drift magnitude
+    :param omega_0_: float, primary wave frequency
+    :param omega: float, frequency of the instability
+    :param kz: float, parallel wavenumber
+    :param m_max: int, maximum Bessel functions to include in the infinite sum
+    :return:
+    """
+    # magnitude of the wave vector
     k_abs = np.sqrt(ky ** 2 + kz ** 2)
     # Bessel argument ion Doppler-shifted
     a = ky * np.abs(v_0_) / omega_0_
@@ -27,8 +41,25 @@ def THETA(omega_pi_, alpha_i_, n, M, ky, v_0_, omega_0_, omega, kz, m_max=20):
     return res
 
 
-def D_matrix(omega, ky, kz, n_c_, omega_pe_, alpha_c_par_,
-             alpha_c_perp_, omega_0_, v_0_, alpha_i_, omega_pi_, N=5):
+def D_matrix(omega, ky, kz, n_c_, omega_pe_, alpha_c_par_, alpha_c_perp_, omega_0_,
+             v_0_, alpha_i_, omega_pi_, N=5, n_max=20):
+    """
+
+    :param omega: float, frequency of the instability
+    :param ky: float, perpendicular wavenumber
+    :param kz: float, parallel wavenumber
+    :param n_c_: float, cold electron density
+    :param omega_pe_: float, electron plasma frequency
+    :param alpha_c_par_: float, cold electron parallel thermal speed with sqrt(2) factor
+    :param alpha_c_perp_: float, cold electron perpendicular thermal speed with sqrt(2) factor
+    :param omega_0_: float, whistler driver frequency
+    :param v_0_: float, drift magnitude of the cold electrons
+    :param alpha_i_: float, ion thermal speed with sqrt(2) factor
+    :param omega_pi_: float, ion plasma frequency
+    :param N: int, sidebands included
+    :param n_max: int, maximum number of Bessel functions to include in the infinite sum
+    :return: D matrix in text after Eq. (11) in manuscript
+    """
     # initialize matrix
     D_mat = np.zeros((N * 2 + 1, N * 2 + 1), dtype="complex128")
     k2 = ky ** 2 + kz ** 2
@@ -38,7 +69,7 @@ def D_matrix(omega, ky, kz, n_c_, omega_pe_, alpha_c_par_,
         D_mat[i1, i1] += k2 + electron_response(n_c=n_c_, omega_pe=omega_pe_,
                                                 alpha_c_par=alpha_c_par_,
                                                 alpha_c_perp=alpha_c_perp_, omega=omega + n * omega_0_,
-                                                k_par=kz, k_perp=ky, n_max=20)
+                                                k_par=kz, k_perp=ky, n_max=n_max)
 
         for M in range(-N, N + 1):
             i2 = M + N

@@ -16,7 +16,20 @@ from QLT_equations.perpQLT import cold_electron_response
 
 
 def THETA(omega_pi_, alpha_i_, n, M, k_perp, v_0_, omega_0_, omega, m_max=20):
-    # magnitude of the wavevector
+    """
+
+    :param omega_pi_: float, ion plamsa frequency
+    :param alpha_i_: float, ion thermal speed with sqrt(2) factor
+    :param n: int, index of Doppler shift
+    :param M: int, index of sideband
+    :param k_perp: float, perpendicular wavenumber
+    :param v_0_: float, drift magnitude
+    :param omega_0_: float, frequency of driver wave
+    :param omega: float, frequency of instability
+    :param m_max: int, maximum sidebands to include
+    :return: THETA_{n, M} in manuscript (see Equation 11)
+    """
+    # magnitude of the wave vector
     k_abs = np.abs(k_perp)
     # Bessel argument ion Doppler-shifted
     a = k_perp * np.abs(v_0_) / omega_0_
@@ -28,6 +41,20 @@ def THETA(omega_pi_, alpha_i_, n, M, k_perp, v_0_, omega_0_, omega, m_max=20):
 
 
 def D_matrix(omega, k_perp, n_c_, omega_pe_, alpha_c_perp_, omega_0_, v_0_, alpha_i_, omega_pi_, N=5):
+    """
+
+    :param omega: float, frequency of the instability
+    :param k_perp: float, perpendicular wavenumber
+    :param n_c_: float, cold electron density over total electron density
+    :param omega_pe_: float, total electron plasma frequency
+    :param alpha_c_perp_: float, cold electron perpendiuclar thermal speed with sqrt(2) factor included
+    :param omega_0_: float, frequency of the primary wave
+    :param v_0_: float, drift magnitude of cold electrons
+    :param alpha_i_: float, ion thermal speed with sqrt(2) factor included
+    :param omega_pi_: float, ion plasma frequency
+    :param N: int, number of sidebands
+    :return: D matrix see the text after Eq. (11) in manuscript
+    """
     # initialize matrix
     D_mat = np.zeros((N * 2 + 1, N * 2 + 1), dtype="complex128")
     for n in range(-N, N + 1):
