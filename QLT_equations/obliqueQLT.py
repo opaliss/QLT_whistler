@@ -275,7 +275,7 @@ def dTpardt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, k_par, k_perp, omega_vec
     return (omega_pe ** 2) / (alpha_c_par ** 2) / np.sqrt(np.pi) * np.sum(sol) * dk
 
 
-def dBdt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, n_c, k_par, k_perp, omega_vec, dk):
+def dBdt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, n_c, k_par, k_perp, omega_vec, dk, omega_0, k_0):
     """
 
     :param E_vec: float or 1d array, psd of electric field
@@ -287,6 +287,8 @@ def dBdt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, n_c, k_par, k_perp, omega_v
     :param k_perp: float or 1d array, perpendicular wavenumber
     :param k_par: float or 1d array, parallel wavenumber
     :param n_c: float, cold plasma density
+    :param omega_0: float, whistler wave frequency
+    :param k_0: float, whistler wave wavenumber
     :return: dBdt
     """
     dK_perp_dt = dKperpdt(E_vec=E_vec, omega_pe=omega_pe, alpha_c_par=alpha_c_par, alpha_c_perp=alpha_c_perp,
@@ -294,7 +296,8 @@ def dBdt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, n_c, k_par, k_perp, omega_v
     dK_par_dt = dKpardt(E_vec=E_vec, omega_pe=omega_pe, alpha_c_par=alpha_c_par, alpha_c_perp=alpha_c_perp,
                         n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec, dk=dk)
     dE_dt = np.sum(dEdt(gamma=omega_vec.imag, E_vec=E_vec)) * dk
-    return - 8 * np.pi * (dK_perp_dt + 0.5 * dK_par_dt + 1 / 8 / np.pi * dE_dt)
+    const = 1 + (omega_0 / k_0 / omega_pe)**2
+    return - 8 * np.pi / const * (dK_perp_dt + 0.5 * dK_par_dt + 1 / 8 / np.pi * dE_dt)
 
 
 def dVdt(omega_0, k_0, E_vec, omega_pe, alpha_c_par, alpha_c_perp, n_c, k_par, k_perp, omega_vec, dk):
@@ -317,4 +320,4 @@ def dVdt(omega_0, k_0, E_vec, omega_pe, alpha_c_par, alpha_c_perp, n_c, k_par, k
     """
     const = 1 / 4 / np.pi * ((omega_0 / k_0 / (omega_0 - 1)) ** 2)
     return const * dBdt(E_vec=E_vec, omega_pe=omega_pe, alpha_c_par=alpha_c_par, alpha_c_perp=alpha_c_perp,
-                        n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec, dk=dk)
+                        n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec, dk=dk, omega_0=omega_0, k_0=k_0)

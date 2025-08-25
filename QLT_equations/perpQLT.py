@@ -52,7 +52,7 @@ def dEdt(gamma, E_vec):
     return 2 * gamma * E_vec
 
 
-def dBdt(omega_pi, alpha_i, E_vec, k_vec, omega_vec, dk, omega_0, v_0):
+def dBdt(omega_pi, alpha_i, E_vec, k_vec, omega_vec, dk, omega_0, v_0, k_0, omega_pe):
     """magnetic field power spectrum d|B(k, t)|^2dt
 
     :param omega_pi: float, ion plasma frequency
@@ -63,15 +63,18 @@ def dBdt(omega_pi, alpha_i, E_vec, k_vec, omega_vec, dk, omega_0, v_0):
     :param dk: float, spacing in wavenumber coordinate
     :param omega_0: float, frequency of the primary driver whistler wave
     :param v_0: float, drift caused by the primary whistler wave
+    :param omega_pe: float, electron plasma frequency
+    :param k_0: float, whistler wave wavenumber
     :return: int d|B(k, t)|^2dt
     """
     dK_perp_dt = dKdt(omega_pi=omega_pi, alpha_i=alpha_i, E_vec=E_vec, k_vec=k_vec, omega_vec=omega_vec, dk=dk,
                       omega_0=omega_0, v_0=v_0)
     dE_dt = np.sum(dEdt(gamma=omega_vec.imag, E_vec=E_vec)) * dk
-    return - 8 * np.pi * (dK_perp_dt + 1 / 8 / np.pi * dE_dt)
+    const = 1 + (omega_0 / k_0 / omega_pe) ** 2
+    return - 8 * np.pi / const * (dK_perp_dt + 1 / 8 / np.pi * dE_dt)
 
 
-def dVdt(omega_0, k_0, omega_pi, alpha_i, E_vec, k_vec, omega_vec, dk, v_0):
+def dVdt(omega_0, k_0, omega_pi, alpha_i, E_vec, k_vec, omega_vec, dk, v_0, omega_pe):
     """change in cold electron drift dVdt
 
     :param omega_pi: float, ion plasma frequency
@@ -83,11 +86,12 @@ def dVdt(omega_0, k_0, omega_pi, alpha_i, E_vec, k_vec, omega_vec, dk, v_0):
     :param omega_0: float, frequency of the primary driver whistler wave
     :param v_0: float, drift caused by the primary whistler wave
     :param k_0: float, wavenumber of the primary wave
+    :param omega_pe: float, electron plasma frequency
     :return: dVdt
     """
     const = 1 / 4 / np.pi * ((omega_0 / k_0 / (omega_0 - 1)) ** 2)
     return const * dBdt(omega_pi=omega_pi, alpha_i=alpha_i, E_vec=E_vec, k_vec=k_vec,
-                        omega_vec=omega_vec, dk=dk, omega_0=omega_0, v_0=v_0)
+                        omega_vec=omega_vec, dk=dk, omega_0=omega_0, v_0=v_0, k_0=k_0, omega_pe=omega_pe)
 
 
 def sum_bessel(lambda_, omega, n_max=50):
@@ -118,7 +122,7 @@ def ion_response(omega_pi, alpha_i, m_star, omega, omega_0, k_perp, v_0):
     """
     a = k_perp * np.abs(v_0) / omega_0
     return (omega_pi ** 2) / (alpha_i ** 2) * (J(m=m_star, Lambda=a) ** 2) \
-           * Z_prime((omega + m_star * omega_0) / (k_perp * alpha_i))
+           * Z_prime((omega + m_star * omega_0) / (np.abs(k_perp) * alpha_i))
 
 
 def cold_electron_response(k_perp, omega, n_max, omega_pe, alpha_perp_c, n_c):

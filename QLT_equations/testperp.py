@@ -41,13 +41,16 @@ def get_omega_vec(k_vec, omega_pe, omega_pi, v_0, alpha_i, alpha_perp_c, n_c, om
             except:
                 omega_vec[ii] = 0
                 print("k|_", str(kk))
-
-        if omega_vec[ii].imag < 0:
+        if omega_vec[ii].imag > 0.1:
+            omega_vec[ii] = omega_vec[ii].real
+        if omega_vec[ii].imag < -0.2:
+            omega_vec[ii] = omega_vec[ii].real
             print("negative val", kk)
     return omega_vec
 
 
-def dydt(t, f, k_vec, omega_pe, omega_pi, k_0, alpha_i, n_c, dk, omega_0, folder_name="perp_gamma"):
+def dydt(t, f, k_vec, omega_pe, omega_pi, k_0, alpha_i, n_c, dk, omega_0, ic1=1.5 + 1E-3j, ic2=1. + 1E-4j,
+         folder_name="perp_gamma", plot=False):
     """
 
     :param t:
@@ -61,29 +64,31 @@ def dydt(t, f, k_vec, omega_pe, omega_pi, k_0, alpha_i, n_c, dk, omega_0, folder
     :param dk:
     :param omega_0:
     :param folder_name:
+    :param plot: boolean, if true then save plots of growth rate
     :return:
     """
     # dispersion solver
     omega_vec = get_omega_vec(k_vec=k_vec, omega_pe=omega_pe, omega_pi=omega_pi,
                               v_0=np.sqrt(f[3]), omega_0=omega_0, alpha_i=alpha_i,
-                              alpha_perp_c=np.sqrt(2 * f[1]), n_c=n_c)
+                              alpha_perp_c=np.sqrt(2 * f[1]), n_c=n_c, ic1=ic1, ic2=ic2)
 
-    if os.path.exists("/Users/oissan/PycharmProjects/QLT_whistler/figs/secondary_QLT/"
-                      + str(folder_name) + "/t_" + str(round(t)) + ".png") is False:
-        fig, ax = plt.subplots(figsize=(6, 3))
-        ax.plot(k_vec, omega_vec.imag, linewidth=2)
-        ax.set_ylabel('$\gamma/|\Omega_{ce}|$', rotation=90)
-        ax.set_xlabel(r"$k_{\perp}d_{e}$")
-        ax.set_ylim(-0.0005, 0.012)
-        ax.set_xlim(176, 220)
-        ax.set_title("$t = $" + str(round(t)))
-        ax.spines['right'].set_visible(False)
-        ax.spines['top'].set_visible(False)
-        plt.grid(alpha=0.3)
-        plt.tight_layout()
-        plt.savefig("/Users/oissan/PycharmProjects/QLT_whistler/figs/secondary_QLT/" + str(folder_name) + "/t_" + str(
-            round(t)) + ".png", dpi=300, bbox_inches='tight')
-        plt.close()
+    if plot:
+        if os.path.exists("/Users/oissan/PycharmProjects/QLT_whistler/figs/secondary_QLT/"
+                          + str(folder_name) + "/t_" + str(round(t)) + ".png") is False:
+            fig, ax = plt.subplots(figsize=(6, 3))
+            ax.plot(k_vec, omega_vec.imag, linewidth=2)
+            ax.set_ylabel('$\gamma/|\Omega_{ce}|$', rotation=90)
+            ax.set_xlabel(r"$k_{\perp}d_{e}$")
+            ax.set_ylim(-0.0005, 0.012)
+            ax.set_xlim(176, 220)
+            ax.set_title("$t = $" + str(round(t)))
+            ax.spines['right'].set_visible(False)
+            ax.spines['top'].set_visible(False)
+            plt.grid(alpha=0.3)
+            plt.tight_layout()
+            plt.savefig("/Users/oissan/PycharmProjects/QLT_whistler/figs/secondary_QLT/" + str(folder_name) + "/t_" + str(
+                round(t)) + ".png", dpi=300, bbox_inches='tight')
+            plt.close()
 
     # cold electron kinetic energy
     rhs_K = dKdt(omega_pi=omega_pi, alpha_i=alpha_i, E_vec=f[4:], k_vec=k_vec, omega_vec=omega_vec, dk=dk,
@@ -97,11 +102,11 @@ def dydt(t, f, k_vec, omega_pe, omega_pi, k_0, alpha_i, n_c, dk, omega_0, folder
 
     # magnetic energy whistler
     rhs_B = dBdt(omega_pi=omega_pi, alpha_i=alpha_i, E_vec=f[4:], k_vec=k_vec, omega_vec=omega_vec, dk=dk,
-                 omega_0=omega_0, v_0=np.sqrt(f[3]))
+                 omega_0=omega_0, v_0=np.sqrt(f[3]), k_0=k_0, omega_pe=omega_pe)
 
     # drift magnitude of cold electrons
     rhs_V = dVdt(omega_0=omega_0, k_0=k_0, omega_pi=omega_pi, alpha_i=alpha_i, E_vec=f[4:], k_vec=k_vec,
-                 omega_vec=omega_vec, dk=dk, v_0=np.sqrt(f[3]))
+                 omega_vec=omega_vec, dk=dk, v_0=np.sqrt(f[3]), omega_pe=omega_pe)
 
     print("t = ", t)
     print("max gamma = ", np.max(omega_vec.imag))
