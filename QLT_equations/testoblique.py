@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
+
 matplotlib.use('TkAgg')
 import os
 import scipy
@@ -8,7 +9,7 @@ from QLT_equations.obliqueQLT import dispersion_relation, dKperpdt, dTperpdt, dK
 
 
 def get_omega_vec(k_perp, k_par, omega_pe, omega_pi, v_0, alpha_i, alpha_c_perp, alpha_c_par, n_c, omega_0,
-                  m_star=-1, ic1=0.5 * 0.99 + 1e-3j, ic2=0.5 * 0.99 + 1e-5j, tol=1e-15):
+                  m_star=-1, ic1=0.5 * 0.99 + 1e-3j, ic2=0.5 * 0.99 + 1e-5j, tol=1e-15, maxiter=100):
     """
 
     :param ic2:
@@ -27,14 +28,30 @@ def get_omega_vec(k_perp, k_par, omega_pe, omega_pi, v_0, alpha_i, alpha_c_perp,
     :return:
     """
     omega_vec = np.zeros(len(k_perp), dtype="complex128")
-    for ii, kk in enumerate(k_perp):
+    for ii in range(len(k_perp)):
         try:
+            if ii > 0:
+                x0 = ic1
+                x1 = ic2
+            else:
+                x0 = omega_vec[ii - 1]
+                x1 = ic1
             omega_vec[ii] = scipy.optimize.newton(dispersion_relation(k_perp=k_perp[ii], k_par=k_par[ii],
                                                                       omega_pe=omega_pe, omega_pi=omega_pi,
                                                                       omega_0=omega_0, v_0=v_0,
                                                                       alpha_c_perp=alpha_c_perp, alpha_i=alpha_i,
                                                                       alpha_c_par=alpha_c_par, n_c=n_c,
-                                                                      m_star=m_star), x0=ic1, tol=tol)
+                                                                      m_star=m_star), x0=x0, tol=tol, x1=x1,
+                                                  maxiter=maxiter)
+            error = np.abs(dispersion_relation(k_perp=k_perp[ii], k_par=k_par[ii],
+                                               omega_pe=omega_pe, omega_pi=omega_pi,
+                                               omega_0=omega_0, v_0=v_0,
+                                               alpha_c_perp=alpha_c_perp, alpha_i=alpha_i,
+                                               alpha_c_par=alpha_c_par, n_c=n_c,
+                                               m_star=m_star)(omega_vec[ii]))
+            if error > 1e-4:
+                print("error is large |k| = ", str(np.sqrt(k_par[ii] ** 2 + k_perp[ii] ** 2)))
+                omega_vec[ii] = omega_0
         except:
             try:
                 omega_vec[ii] = scipy.optimize.newton(dispersion_relation(k_perp=k_perp[ii], k_par=k_par[ii],
@@ -42,9 +59,21 @@ def get_omega_vec(k_perp, k_par, omega_pe, omega_pi, v_0, alpha_i, alpha_c_perp,
                                                                           omega_0=omega_0, v_0=v_0,
                                                                           alpha_c_perp=alpha_c_perp, alpha_i=alpha_i,
                                                                           alpha_c_par=alpha_c_par, n_c=n_c,
-                                                                          m_star=m_star), x0=ic2, tol=tol)
+                                                                          m_star=m_star), x0=ic1, tol=tol, x1=ic2,
+                                                      maxiter=maxiter)
+
+                error = np.abs(dispersion_relation(k_perp=k_perp[ii], k_par=k_par[ii],
+                                                   omega_pe=omega_pe, omega_pi=omega_pi,
+                                                   omega_0=omega_0, v_0=v_0,
+                                                   alpha_c_perp=alpha_c_perp, alpha_i=alpha_i,
+                                                   alpha_c_par=alpha_c_par, n_c=n_c,
+                                                   m_star=m_star)(omega_vec[ii]))
+                if error > 1e-4:
+                    print("error is large |k| = ", str(np.sqrt(k_par[ii] ** 2 + k_perp[ii] ** 2)))
+                    omega_vec[ii] = omega_0
+
             except:
-                print("|k| = ", str(np.sqrt(k_par[ii]**2 + k_perp[ii]**2)))
+                print("failed to converge |k| = ", str(np.sqrt(k_par[ii] ** 2 + k_perp[ii] ** 2)))
                 omega_vec[ii] = omega_0
 
         if np.abs(omega_vec[ii].imag) > 0.02:
@@ -82,17 +111,17 @@ def dydt(t, f, k_perp, k_par, omega_pe, omega_pi, k_0, alpha_i, n_c, dk,
         print("negative dE was found")
         f[6:][np.where(f[6:] < 0)] = np.zeros(len(np.where(f[6:] < 0)))
 
-
     # dispersion solver
-    omega_vec = get_omega_vec(k_perp=k_perp, k_par=k_par, omega_pe=omega_pe, omega_pi=omega_pi, v_0=np.sqrt(np.abs(f[5])),
+    omega_vec = get_omega_vec(k_perp=k_perp, k_par=k_par, omega_pe=omega_pe, omega_pi=omega_pi,
+                              v_0=np.sqrt(np.abs(f[5])),
                               alpha_i=alpha_i, alpha_c_perp=np.sqrt(2 * f[2]), alpha_c_par=np.sqrt(2 * f[3]), n_c=n_c,
                               omega_0=omega_0, m_star=m_star, ic1=ic1, ic2=ic2)
 
     if plot_:
         if os.path.exists("/Users/oissan/PycharmProjects/QLT_whistler/figs/secondary_QLT/"
-                          + str(folder_name) + "/t_" + str(round(t))+ ".png") is False:
+                          + str(folder_name) + "/t_" + str(round(t)) + ".png") is False:
             fig, ax = plt.subplots(figsize=(6, 3))
-            ax.scatter(np.sqrt(k_perp**2 + k_par**2), omega_vec.imag, linewidth=2)
+            ax.scatter(np.sqrt(k_perp ** 2 + k_par ** 2), omega_vec.imag, linewidth=2)
             ax.set_ylabel(r"$\gamma/|\Omega_{ce}|$", rotation=90)
             ax.set_xlabel(r"$|\vec{k}|d_{e}$")
             ax.set_title("$t = $" + str(round(t)))
@@ -100,11 +129,13 @@ def dydt(t, f, k_perp, k_par, omega_pe, omega_pi, k_0, alpha_i, n_c, dk,
             ax.spines['top'].set_visible(False)
             plt.grid(alpha=0.5)
             plt.tight_layout()
-            plt.savefig("/Users/oissan/PycharmProjects/QLT_whistler/figs/secondary_QLT/" + str(folder_name) + "/t_" + str(round(t)) + "_imag.png", dpi=300, bbox_inches='tight')
+            plt.savefig(
+                "/Users/oissan/PycharmProjects/QLT_whistler/figs/secondary_QLT/" + str(folder_name) + "/t_" + str(
+                    round(t)) + "_imag.png", dpi=300, bbox_inches='tight')
             plt.close()
 
             fig, ax = plt.subplots(figsize=(6, 3))
-            ax.scatter(np.sqrt(k_perp**2 + k_par**2), omega_vec.real, linewidth=2)
+            ax.scatter(np.sqrt(k_perp ** 2 + k_par ** 2), omega_vec.real, linewidth=2)
             ax.set_ylabel(r"$\omega_{r}/|\Omega_{ce}|$", rotation=90)
             ax.set_xlabel(r"$|\vec{k}|d_{e}$")
             ax.set_title("$t = $" + str(round(t)))
@@ -112,7 +143,9 @@ def dydt(t, f, k_perp, k_par, omega_pe, omega_pi, k_0, alpha_i, n_c, dk,
             ax.spines['top'].set_visible(False)
             plt.grid(alpha=0.5)
             plt.tight_layout()
-            plt.savefig("/Users/oissan/PycharmProjects/QLT_whistler/figs/secondary_QLT/" + str(folder_name) + "/t_" + str(round(t)) + "_real.png", dpi=300, bbox_inches='tight')
+            plt.savefig(
+                "/Users/oissan/PycharmProjects/QLT_whistler/figs/secondary_QLT/" + str(folder_name) + "/t_" + str(
+                    round(t)) + "_real.png", dpi=300, bbox_inches='tight')
             plt.close()
 
     # cold electron kinetic energy
@@ -137,9 +170,6 @@ def dydt(t, f, k_perp, k_par, omega_pe, omega_pi, k_0, alpha_i, n_c, dk,
     rhs_T_par = dTpardt(E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]), alpha_c_perp=np.sqrt(2 * f[2]),
                         k_par=k_par, k_perp=k_perp, omega_vec=omega_vec, dk=dk)
 
-    if rhs_T_par < 0:
-        rhs_T_par = 0
-
     # magnetic energy whistler
     rhs_B = dBdt(E_vec=f[6:], omega_pe=omega_pe,
                  alpha_c_par=np.sqrt(2 * f[3]),
@@ -147,13 +177,10 @@ def dydt(t, f, k_perp, k_par, omega_pe, omega_pi, k_0, alpha_i, n_c, dk,
                  n_c=n_c, k_par=k_par, k_perp=k_perp,
                  omega_vec=omega_vec, dk=dk, k_0=k_0, omega_0=omega_0)
 
-    if f[5] > 1e-8:
-        # drift magnitude of cold electrons
-        rhs_V = dVdt(omega_0=omega_0, k_0=k_0, E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]),
-                     alpha_c_perp=np.sqrt(2 * f[2]), n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec,
-                     dk=dk)
-    else:
-        rhs_V = 0
+    # drift magnitude of cold electrons
+    rhs_V = dVdt(omega_0=omega_0, k_0=k_0, E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]),
+                 alpha_c_perp=np.sqrt(2 * f[2]), n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec,
+                 dk=dk)
 
     # electrostatic electric energy
     rhs_E = dEdt(gamma=omega_vec.imag, E_vec=f[6:])
@@ -209,8 +236,9 @@ if __name__ == "__main__":
 
     # simulate
     result = scipy.integrate.solve_ivp(fun=dydt, t_span=[0, t_max],
-                                       y0=np.concatenate(([K_perp_0], [K_par_0], [T_perp_0], [T_par_0], [dB0], [v_0 ** 2], dE_init)),
-                                       args=(k_perp_, k_par_, omega_pe, omega_pi, k_0, alpha_i, n_c, dk_perp*dk_par,
+                                       y0=np.concatenate(
+                                           ([K_perp_0], [K_par_0], [T_perp_0], [T_par_0], [dB0], [v_0 ** 2], dE_init)),
+                                       args=(k_perp_, k_par_, omega_pe, omega_pi, k_0, alpha_i, n_c, dk_perp * dk_par,
                                              omega_0, m_star, ic1, ic2, "oblique_gamma", False),
                                        atol=1e-9, rtol=1e-9,
                                        method='Radau')

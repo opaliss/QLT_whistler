@@ -22,7 +22,7 @@ def THETA(omega_pi_, alpha_i_, n, M, ky, v_0_, omega_0_, omega, kz, m_max=20):
     :param alpha_i_: float, ion thermal speed with factor sqrt(2) included
     :param n: int, sidebands integer
     :param M: int, sidebands integer
-    :param ky: float, perpendicular wavenumber
+    :param ky: float, perp wavenumber
     :param v_0_: float, cold electron drift magnitude
     :param omega_0_: float, primary wave frequency
     :param omega: float, frequency of the instability
@@ -46,12 +46,12 @@ def D_matrix(omega, ky, kz, n_c_, omega_pe_, alpha_c_par_, alpha_c_perp_, omega_
     """
 
     :param omega: float, frequency of the instability
-    :param ky: float, perpendicular wavenumber
+    :param ky: float, perp wavenumber
     :param kz: float, parallel wavenumber
     :param n_c_: float, cold electron density
     :param omega_pe_: float, electron plasma frequency
     :param alpha_c_par_: float, cold electron parallel thermal speed with sqrt(2) factor
-    :param alpha_c_perp_: float, cold electron perpendicular thermal speed with sqrt(2) factor
+    :param alpha_c_perp_: float, cold electron perp thermal speed with sqrt(2) factor
     :param omega_0_: float, whistler driver frequency
     :param v_0_: float, drift magnitude of the cold electrons
     :param alpha_i_: float, ion thermal speed with sqrt(2) factor

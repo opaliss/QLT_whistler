@@ -9,7 +9,7 @@ from QLT_equations.perpQLT import dispersion_relation, dVdt, dBdt, dEdt, dKdt
 
 
 def get_omega_vec(k_vec, omega_pe, omega_pi, v_0, alpha_i, alpha_perp_c, n_c, omega_0,
-                  ic1=1.5 + 1E-3j, ic2=1. + 1E-4j, tol=1e-15):
+                  ic1=1.5 + 1E-3j, ic2=1. + 1E-4j, tol=1e-15, maxiter=1000):
     """
 
     :param tol:
@@ -26,26 +26,32 @@ def get_omega_vec(k_vec, omega_pe, omega_pi, v_0, alpha_i, alpha_perp_c, n_c, om
     :return:
     """
     omega_vec = np.zeros(len(k_vec), dtype="complex128")
-    for ii, kk in enumerate(k_vec):
+    for ii in range(len(k_vec)):
         try:
+            if ii > 0:
+                x0 = ic1
+                x1 = ic2
+            else:
+                x0 = omega_vec[ii - 1]
+                x1 = ic1
             omega_vec[ii] = scipy.optimize.newton(dispersion_relation(k_perp=kk, omega_pe=omega_pe, omega_0=omega_0,
                                                                       omega_pi=omega_pi, v_0=v_0, alpha_i=alpha_i,
                                                                       alpha_perp_c=alpha_perp_c, n_c=n_c),
-                                                  x0=ic1, tol=tol)
+                                                  x0=x0, x1=x1, tol=tol, maxiter=maxiter)
         except:
             try:
                 omega_vec[ii] = scipy.optimize.newton(dispersion_relation(k_perp=kk, omega_pe=omega_pe, omega_0=omega_0,
                                                                           omega_pi=omega_pi, v_0=v_0, alpha_i=alpha_i,
                                                                           alpha_perp_c=alpha_perp_c, n_c=n_c),
-                                                      x0=ic2, tol=tol)
+                                                      x0=ic1, x1=ic2, tol=tol, maxiter=maxiter)
             except:
                 omega_vec[ii] = 0
-                print("k|_", str(kk))
+                print("k|_", str(k_vec[ii]))
         if omega_vec[ii].imag > 0.1:
             omega_vec[ii] = omega_vec[ii].real
         if omega_vec[ii].imag < -0.2:
             omega_vec[ii] = omega_vec[ii].real
-            print("negative val", kk)
+            print("negative val", k_vec[ii])
     return omega_vec
 
 
@@ -102,7 +108,7 @@ def dydt(t, f, k_vec, omega_pe, omega_pi, k_0, alpha_i, n_c, dk, omega_0, ic1=1.
 
     # magnetic energy whistler
     rhs_B = dBdt(omega_pi=omega_pi, alpha_i=alpha_i, E_vec=f[4:], k_vec=k_vec, omega_vec=omega_vec, dk=dk,
-                 omega_0=omega_0, v_0=np.sqrt(f[3]), k_0=k_0, omega_pe=omega_pe)
+                 omega_0=omega_0, v_0=np.sqrt(f[3]), k_0=k_0)
 
     # drift magnitude of cold electrons
     rhs_V = dVdt(omega_0=omega_0, k_0=k_0, omega_pi=omega_pi, alpha_i=alpha_i, E_vec=f[4:], k_vec=k_vec,

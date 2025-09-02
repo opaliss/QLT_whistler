@@ -1,4 +1,4 @@
-"""Module with functions to solve the full-dispersion relation for perpendicular waves
+"""Module with functions to solve the full-dispersion relation for perp waves
 
 References
 ----------
@@ -22,7 +22,7 @@ def THETA(omega_pi_, alpha_i_, n, M, k_perp, v_0_, omega_0_, omega, m_max=20):
     :param alpha_i_: float, ion thermal speed with sqrt(2) factor
     :param n: int, index of Doppler shift
     :param M: int, index of sideband
-    :param k_perp: float, perpendicular wavenumber
+    :param k_perp: float, perp wavenumber
     :param v_0_: float, drift magnitude
     :param omega_0_: float, frequency of driver wave
     :param omega: float, frequency of instability
@@ -44,7 +44,7 @@ def D_matrix(omega, k_perp, n_c_, omega_pe_, alpha_c_perp_, omega_0_, v_0_, alph
     """
 
     :param omega: float, frequency of the instability
-    :param k_perp: float, perpendicular wavenumber
+    :param k_perp: float, perp wavenumber
     :param n_c_: float, cold electron density over total electron density
     :param omega_pe_: float, total electron plasma frequency
     :param alpha_c_perp_: float, cold electron perpendiuclar thermal speed with sqrt(2) factor included

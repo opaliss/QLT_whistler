@@ -139,7 +139,7 @@ def dydt(t, f, q_vec, delta, beta_par_i, include_cold):
                       beta_par_i=beta_par_i, include_cold=include_cold)
 
     # cold
-    # beta perpendicular
+    # beta perp
     if include_cold:
         rhs_beta_perp_c = dbetaperp_dt(A=A_c, q_vec=q_vec, B_vec=f[4:], z_vec=z_vec, dq=q_vec[1] - q_vec[0],
                                        beta_par=f[1])
@@ -151,7 +151,7 @@ def dydt(t, f, q_vec, delta, beta_par_i, include_cold):
         rhs_beta_par_c = 0
 
         # hot
-    # beta perpendicular
+    # beta perp
     rhs_beta_perp_h = dbetaperp_dt(A=A_h, q_vec=q_vec, B_vec=f[4:], z_vec=z_vec, dq=q_vec[1] - q_vec[0], beta_par=f[3])
     # beta parallel
     rhs_beta_par_h = dbetapar_dt(A=A_h, q_vec=q_vec, B_vec=f[4:], z_vec=z_vec, dq=q_vec[1] - q_vec[0], beta_par=f[3])

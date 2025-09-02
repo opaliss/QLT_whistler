@@ -49,7 +49,7 @@ def electron_response(n_c, omega_pe, alpha_c_par, alpha_c_perp, omega, k_par, n_
     :param omega: float or 1d array, frequency
     :param k_par: float or 1d array, parallel wavenumber
     :param n_max: int, maximum number of bessel function to include in the infinite sum
-    :param k_perp: float or 1d array, perpendicular wavenumber
+    :param k_perp: float or 1d array, perp wavenumber
     :return: linear electron response
     """
     # Bessel argument electron
@@ -70,7 +70,7 @@ def ion_response(omega_pi, alpha_i, k_perp, v_0, omega_0, omega, k_par, m_star=-
     :param omega_pi: float, ion plasma frequency
     :param alpha_i: float, sqrt(2T_{i}/m_{i})
     :param m_star: int, most important bessel combination, default is m_star=-1
-    :param k_perp: float or 1d array, perpendicular wavenumber
+    :param k_perp: float or 1d array, perp wavenumber
     :param k_par: float or 1d array, parallel wavenumber
     :param v_0: float, cold electron drift magnitude caused by the polarized electric field of the primary wave
     :param omega_0: float, frequency of the primary wave at saturation
@@ -86,10 +86,10 @@ def ion_response(omega_pi, alpha_i, k_perp, v_0, omega_0, omega, k_par, m_star=-
 
 
 def dispersion_relation(k_perp, k_par, omega_pe, omega_pi, omega_0, v_0, alpha_i,
-                        alpha_c_par, alpha_c_perp, n_c, m_star=-1, n_max=50):
+                        alpha_c_par, alpha_c_perp, n_c, m_star=-1, n_max=20):
     """dispersion relation of oblique electrostatic waves
 
-    :param k_perp: float or 1d array, perpendicular wavenumber
+    :param k_perp: float or 1d array, perp wavenumber
     :param k_par: float or 1d array, parallel wavenumber
     :param omega_pe: float, electron plasma frequency
     :param omega_pi: float, ion plasma frequency
@@ -121,7 +121,7 @@ def dKperpdt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, n_c, k_par, k_perp, ome
     :param E_vec: float or 1d array, psd of electric field
     :param omega_pe: float, plasma frequency
     :param n_c: float, cold plasma density
-    :param k_perp: float or 1d array, perpendicular wavenumber
+    :param k_perp: float or 1d array, perp wavenumber
     :param k_par: float or 1d array, parallel wavenumber
     :return: dKperpdt
     """
@@ -148,7 +148,7 @@ def dKperpdt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, n_c, k_par, k_perp, ome
                                                                               alpha_c_par=alpha_c_par,
                                                                               n_factor=2)
         # final term (summing term_1 and term_2)
-        sol[ii] = E_vec[ii] / k2 * (term_1 + term_2).imag
+        sol[ii] = E_vec[ii] / k2 * (term_1 + term_2).imag * k_perp[ii]
 
     # return the integral over all k
     return 0.5 * n_c / np.pi * (omega_pe ** 2) / (alpha_c_par ** 2) * np.sum(sol) * dk
@@ -164,7 +164,7 @@ def dKpardt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, n_c, k_par, k_perp, omeg
     :param n_c: float, cold plasma density
     :param dk: float, spacing in wavenumbers dk_perp*dk_par
     :param omega_vec: float or 1d array, frequency
-    :param k_perp: float or 1d array, perpendicular wavenumber
+    :param k_perp: float or 1d array, perp wavenumber
     :param k_par: float or 1d array, parallel wavenumber
     :return: dKpardt
     """
@@ -197,7 +197,7 @@ def dKpardt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, n_c, k_par, k_perp, omeg
                                                                            alpha_c_par=alpha_c_par,
                                                                            n_factor=2)
         # summing all terms (term_1 + term_2 + term_3)
-        sol[ii] = E_vec[ii] / k2 * (omega_vec[ii] + term_1 + term_2 + term_3).imag
+        sol[ii] = E_vec[ii] / k2 * (omega_vec[ii] + term_1 + term_2 + term_3).imag * k_perp[ii]
 
     # integration over all k's
     return n_c / np.pi * (omega_pe ** 2) / (alpha_c_par ** 2) * np.sum(sol) * dk
@@ -213,7 +213,7 @@ def dTperpdt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, k_par, k_perp, omega_ve
     :param alpha_c_par: float, sqrt(2T_{\| c}/m_{e})
     :param dk: float, spacing in wavenumbers dk_perp*dk_par
     :param omega_vec: float or 1d array, frequency
-    :param k_perp: float or 1d array, perpendicular wavenumber
+    :param k_perp: float or 1d array, perp wavenumber
     :param k_par: float or 1d array, parallel wavenumber
     :return: dTperpdt
     """
@@ -235,7 +235,7 @@ def dTperpdt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, k_par, k_perp, omega_ve
             exp = np.exp(-xi_n ** 2)
             add = n * I(Lambda=lambda_, m=n) * (xi_0 + n / k_par[ii] / alpha_c_par * anisotropy_term)
             term_1 += add * exp
-        sol[ii] = E_vec[ii] / k2 * term_1
+        sol[ii] = E_vec[ii] / k2 * term_1 * k_perp[ii]
     # integrate over all k's
     return 0.5 * (omega_pe ** 2) / (alpha_c_par ** 2) / np.sqrt(np.pi) * np.sum(sol) * dk
 
@@ -250,7 +250,7 @@ def dTpardt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, k_par, k_perp, omega_vec
     :param alpha_c_par: float, sqrt(2T_{\| c}/m_{e})
     :param dk: float, spacing in wavenumbers dk_perp*dk_par
     :param omega_vec: float or 1d array, frequency
-    :param k_perp: float or 1d array, perpendicular wavenumber
+    :param k_perp: float or 1d array, perp wavenumber
     :param k_par: float or 1d array, parallel wavenumber
     :return: dTpardt
     """
@@ -270,7 +270,7 @@ def dTpardt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, k_par, k_perp, omega_vec
             xi_n = ((omega_vec[ii] - n) / k_par[ii] / alpha_c_par).real
             exp = np.exp(-xi_n ** 2)
             term_1 += I(Lambda=lambda_, m=n) * (omega_vec[ii].real + n * anisotropy_term) * xi_n * exp
-        sol[ii] = E_vec[ii] / k2 * term_1
+        sol[ii] = E_vec[ii] / k2 * term_1 * k_perp[ii]
     # integrate over all k's
     return (omega_pe ** 2) / (alpha_c_par ** 2) / np.sqrt(np.pi) * np.sum(sol) * dk
 
@@ -284,7 +284,7 @@ def dBdt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, n_c, k_par, k_perp, omega_v
     :param alpha_c_par: float, sqrt(2T_{\| c}/m_{e})
     :param dk: float, spacing in wavenumbers dk_perp*dk_par
     :param omega_vec: float or 1d array, frequency
-    :param k_perp: float or 1d array, perpendicular wavenumber
+    :param k_perp: float or 1d array, perp wavenumber
     :param k_par: float or 1d array, parallel wavenumber
     :param n_c: float, cold plasma density
     :param omega_0: float, whistler wave frequency
@@ -295,8 +295,8 @@ def dBdt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, n_c, k_par, k_perp, omega_v
                           n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec, dk=dk)
     dK_par_dt = dKpardt(E_vec=E_vec, omega_pe=omega_pe, alpha_c_par=alpha_c_par, alpha_c_perp=alpha_c_perp,
                         n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec, dk=dk)
-    dE_dt = np.sum(dEdt(gamma=omega_vec.imag, E_vec=E_vec)) * dk
-    const = 1 + (omega_0 / k_0 / omega_pe)**2
+    dE_dt = np.sum(dEdt(gamma=omega_vec.imag, E_vec=E_vec) * k_perp) * dk
+    const = 1 + (omega_0 / k_0 / (1 - omega_0))**2
     return - 8 * np.pi / const * (dK_perp_dt + 0.5 * dK_par_dt + 1 / 8 / np.pi * dE_dt)
 
 
@@ -312,7 +312,7 @@ def dVdt(omega_0, k_0, E_vec, omega_pe, alpha_c_par, alpha_c_perp, n_c, k_par, k
     :param n_c: float, cold plasma density
     :param dk: float, spacing in wavenumbers dk_perp*dk_par
     :param omega_vec: float or 1d array, frequency
-    :param k_perp: float or 1d array, perpendicular wavenumber
+    :param k_perp: float or 1d array, perp wavenumber
     :param k_par: float or 1d array, parallel wavenumber
     :param dk: float, spacing in wavenumbers dk_perp*dk_par
     :param omega_vec: float or 1d array, frequency

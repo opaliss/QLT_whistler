@@ -1,4 +1,4 @@
-"""Module with QLT equations describing the quasi-perpendicular (ECDI-like) electrostatic
+"""Module with QLT equations describing the quasi-perp (ECDI-like) electrostatic
 secondary drift-driven instability
 
 References
@@ -17,7 +17,7 @@ from QLT_equations.general_plasma_equations import Z_prime, I, J
 
 
 def dKdt(omega_pi, alpha_i, E_vec, k_vec, omega_vec, dk, omega_0, v_0, m_star=-3):
-    """evolution equation for the perpendicular kinetic energy of the cold electron population
+    """evolution equation for the perp kinetic energy of the cold electron population
 
     :param omega_pi: float, ion plasma frequency
     :param alpha_i: float, sqrt(2)v_{thi} proportional to the ion thermal speed
@@ -52,7 +52,7 @@ def dEdt(gamma, E_vec):
     return 2 * gamma * E_vec
 
 
-def dBdt(omega_pi, alpha_i, E_vec, k_vec, omega_vec, dk, omega_0, v_0, k_0, omega_pe):
+def dBdt(omega_pi, alpha_i, E_vec, k_vec, omega_vec, dk, omega_0, v_0, k_0):
     """magnetic field power spectrum d|B(k, t)|^2dt
 
     :param omega_pi: float, ion plasma frequency
@@ -63,14 +63,13 @@ def dBdt(omega_pi, alpha_i, E_vec, k_vec, omega_vec, dk, omega_0, v_0, k_0, omeg
     :param dk: float, spacing in wavenumber coordinate
     :param omega_0: float, frequency of the primary driver whistler wave
     :param v_0: float, drift caused by the primary whistler wave
-    :param omega_pe: float, electron plasma frequency
     :param k_0: float, whistler wave wavenumber
     :return: int d|B(k, t)|^2dt
     """
     dK_perp_dt = dKdt(omega_pi=omega_pi, alpha_i=alpha_i,
                       E_vec=E_vec, k_vec=k_vec, omega_vec=omega_vec, dk=dk,
                       omega_0=omega_0, v_0=v_0)
-    dE_dt = np.sum(dEdt(gamma=omega_vec.imag, E_vec=E_vec)) * dk
+    dE_dt = np.sum(dEdt(gamma=omega_vec.imag, E_vec=E_vec) * k_vec) * dk
     const = 1 + (omega_0 / k_0 / np.abs(omega_0 - 1)) ** 2
     return - 8 * np.pi / const * (dK_perp_dt + 1 / 8 / np.pi * dE_dt)
 
@@ -142,7 +141,7 @@ def cold_electron_response(k_perp, omega, n_max, omega_pe, alpha_perp_c, n_c):
 
 
 def dispersion_relation(k_perp, omega_pe, omega_0, omega_pi, v_0, alpha_i, alpha_perp_c, n_c, m_star=-3, n_max=20):
-    """linear dispersion relation of quasi-perpendicular electrostatic secondary-instabilities
+    """linear dispersion relation of quasi-perp electrostatic secondary-instabilities
 
     :param k_perp: float or 1d array, wavenumber
     :param omega_pi: float, ion plasma frequency
