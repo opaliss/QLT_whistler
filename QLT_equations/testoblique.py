@@ -184,10 +184,11 @@ def dydt(t, f, k_perp, k_par, omega_pe, omega_pi, k_0, alpha_i, n_c, dk,
     # electrostatic electric energy
     rhs_E = dEdt(gamma=omega_vec.imag, E_vec=f[6:])
 
+    # print for diagnostics
     print("t = ", t)
     print("max gamma = ", np.max(omega_vec.imag))
-    print("drift = ", np.sqrt(f[5]))
     return np.concatenate(([rhs_K_perp], [rhs_K_par], [rhs_T_perp], [rhs_T_par], [rhs_B], [rhs_V], rhs_E))
+
 
 
 if __name__ == "__main__":
@@ -242,5 +243,3 @@ if __name__ == "__main__":
                                        atol=1e-9, rtol=1e-9,
                                        method='Radau')
 
-    np.save("oblique_y.npy", result.y)
-    np.save("oblique_t.npy", result.t)
