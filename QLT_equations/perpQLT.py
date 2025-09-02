@@ -142,7 +142,7 @@ def cold_electron_response(k_perp, omega, n_max, omega_pe, alpha_perp_c, n_c):
 
 
 def dispersion_relation(k_perp, omega_pe, omega_0, omega_pi, v_0, alpha_i, alpha_perp_c, n_c, m_star=-3, n_max=20):
-    """linear dispersion relation of quasi-perpendicular electrostatic secondary_waves-instabilities
+    """linear dispersion relation of quasi-perpendicular electrostatic secondary-instabilities
 
     :param k_perp: float or 1d array, wavenumber
     :param omega_pi: float, ion plasma frequency
