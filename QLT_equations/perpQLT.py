@@ -67,10 +67,11 @@ def dBdt(omega_pi, alpha_i, E_vec, k_vec, omega_vec, dk, omega_0, v_0, k_0, omeg
     :param k_0: float, whistler wave wavenumber
     :return: int d|B(k, t)|^2dt
     """
-    dK_perp_dt = dKdt(omega_pi=omega_pi, alpha_i=alpha_i, E_vec=E_vec, k_vec=k_vec, omega_vec=omega_vec, dk=dk,
+    dK_perp_dt = dKdt(omega_pi=omega_pi, alpha_i=alpha_i,
+                      E_vec=E_vec, k_vec=k_vec, omega_vec=omega_vec, dk=dk,
                       omega_0=omega_0, v_0=v_0)
     dE_dt = np.sum(dEdt(gamma=omega_vec.imag, E_vec=E_vec)) * dk
-    const = 1 + (omega_0 / k_0 / omega_pe) ** 2
+    const = 1 + (omega_0 / k_0 / np.abs(omega_0 - 1)) ** 2
     return - 8 * np.pi / const * (dK_perp_dt + 1 / 8 / np.pi * dE_dt)
 
 
@@ -94,12 +95,12 @@ def dVdt(omega_0, k_0, omega_pi, alpha_i, E_vec, k_vec, omega_vec, dk, v_0, omeg
                         omega_vec=omega_vec, dk=dk, omega_0=omega_0, v_0=v_0, k_0=k_0, omega_pe=omega_pe)
 
 
-def sum_bessel(lambda_, omega, n_max=50):
+def sum_bessel(lambda_, omega, n_max=20):
     """Bessel function sum
 
     :param lambda_: float, argument of the Bessel function
     :param omega: float, frequency omega_r + i gamma
-    :param n_max: int, maximum number of terms in the summation
+    :param n_max: int, maximum number of terms in the summation, default is 20
     :return: Bessel function sum
     """
     sol = 0
@@ -140,7 +141,7 @@ def cold_electron_response(k_perp, omega, n_max, omega_pe, alpha_perp_c, n_c):
     return -n_c * 4 * (omega_pe ** 2) / (alpha_perp_c ** 2) * sum_bessel(lambda_=lambda_, omega=omega, n_max=n_max)
 
 
-def dispersion_relation(k_perp, omega_pe, omega_0, omega_pi, v_0, alpha_i, alpha_perp_c, n_c, m_star=-3, n_max=50):
+def dispersion_relation(k_perp, omega_pe, omega_0, omega_pi, v_0, alpha_i, alpha_perp_c, n_c, m_star=-3, n_max=20):
     """linear dispersion relation of quasi-perpendicular electrostatic secondary_waves-instabilities
 
     :param k_perp: float or 1d array, wavenumber
@@ -152,7 +153,7 @@ def dispersion_relation(k_perp, omega_pe, omega_0, omega_pi, v_0, alpha_i, alpha
     :param alpha_perp_c: float, sqrt(2T_{perp c}/m_{e})  proportional to the ion thermal speed
     :param n_c: float, ratio of cold electron density to total cold electron density
     :param m_star: int, most relevant sideband in the dispersion relation
-    :param n_max: int, maximum number of bessel terms to include in the summation
+    :param n_max: int, maximum number of bessel terms to include in the summation, default is 20
     :return: D(omega, k_perp)
     """
     return lambda omega: k_perp ** 2 \

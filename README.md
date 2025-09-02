@@ -1,4 +1,4 @@
-## Impact of cold plasma population on the whistler instability
+## Impact of cold electron population on the whistler anisotropy instability 
 
 ### Python Dependencies
 1. Python >= 3.9.13
