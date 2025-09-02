@@ -8,13 +8,12 @@ matplotlib.use('TkAgg')
 from QLT_equations.perpQLT import dispersion_relation, dVdt, dBdt, dEdt, dKdt
 
 
-def get_omega_vec(k_vec, omega_pe, omega_pi, v_0, alpha_i, alpha_perp_c, n_c, omega_0,
-                  ic1=1.5 + 1E-3j, ic2=1. + 1E-4j, tol=1e-15, maxiter=1000):
+def get_omega_vec(k_vec, omega_pe, omega_pi,
+                  v_0, alpha_i, alpha_perp_c, n_c, omega_0,
+                   tol=1e-15, maxiter=1000):
     """
 
     :param tol:
-    :param ic2:
-    :param ic1:
     :param k_vec:
     :param omega_pe:
     :param omega_pi:
@@ -29,23 +28,23 @@ def get_omega_vec(k_vec, omega_pe, omega_pi, v_0, alpha_i, alpha_perp_c, n_c, om
     for ii in range(len(k_vec)):
         try:
             if ii > 0:
-                x0 = ic1
-                x1 = ic2
+                x0 = 3*omega_0 + 1e-3j
+                x1 = 2.5*omega_0 + 1e-3j
             else:
                 x0 = omega_vec[ii - 1]
-                x1 = ic1
-            omega_vec[ii] = scipy.optimize.newton(dispersion_relation(k_perp=kk, omega_pe=omega_pe, omega_0=omega_0,
+                x1 = 3*omega_0 + 1e-3j
+            omega_vec[ii] = scipy.optimize.newton(dispersion_relation(k_perp=k_vec[ii], omega_pe=omega_pe, omega_0=omega_0,
                                                                       omega_pi=omega_pi, v_0=v_0, alpha_i=alpha_i,
                                                                       alpha_perp_c=alpha_perp_c, n_c=n_c),
                                                   x0=x0, x1=x1, tol=tol, maxiter=maxiter)
         except:
             try:
-                omega_vec[ii] = scipy.optimize.newton(dispersion_relation(k_perp=kk, omega_pe=omega_pe, omega_0=omega_0,
+                omega_vec[ii] = scipy.optimize.newton(dispersion_relation(k_perp=k_vec[ii], omega_pe=omega_pe, omega_0=omega_0,
                                                                           omega_pi=omega_pi, v_0=v_0, alpha_i=alpha_i,
                                                                           alpha_perp_c=alpha_perp_c, n_c=n_c),
-                                                      x0=ic1, x1=ic2, tol=tol, maxiter=maxiter)
+                                                      x0=2.8*omega_0 + 1e-3j, x1=3.5*omega_0 + 1e-3j, tol=tol, maxiter=maxiter)
             except:
-                omega_vec[ii] = 0
+                omega_vec[ii] = omega_0*3 + 1e-3j
                 print("k|_", str(k_vec[ii]))
         if omega_vec[ii].imag > 0.1:
             omega_vec[ii] = omega_vec[ii].real
@@ -55,8 +54,7 @@ def get_omega_vec(k_vec, omega_pe, omega_pi, v_0, alpha_i, alpha_perp_c, n_c, om
     return omega_vec
 
 
-def dydt(t, f, k_vec, omega_pe, omega_pi, k_0, alpha_i, n_c, dk, omega_0, ic1=1.5 + 1E-3j, ic2=1. + 1E-4j,
-         folder_name="perp_gamma", plot=False):
+def dydt(t, f, k_vec, omega_pe, omega_pi, k_0, alpha_i, n_c, dk, omega_0, folder_name="perp_gamma", plot=False):
     """
 
     :param t:
@@ -76,7 +74,7 @@ def dydt(t, f, k_vec, omega_pe, omega_pi, k_0, alpha_i, n_c, dk, omega_0, ic1=1.
     # dispersion solver
     omega_vec = get_omega_vec(k_vec=k_vec, omega_pe=omega_pe, omega_pi=omega_pi,
                               v_0=np.sqrt(f[3]), omega_0=omega_0, alpha_i=alpha_i,
-                              alpha_perp_c=np.sqrt(2 * f[1]), n_c=n_c, ic1=ic1, ic2=ic2)
+                              alpha_perp_c=np.sqrt(2 * f[1]), n_c=n_c)
 
     if plot:
         if os.path.exists("/Users/oissan/PycharmProjects/QLT_whistler/figs/secondary_QLT/"
@@ -112,7 +110,7 @@ def dydt(t, f, k_vec, omega_pe, omega_pi, k_0, alpha_i, n_c, dk, omega_0, ic1=1.
 
     # drift magnitude of cold electrons
     rhs_V = dVdt(omega_0=omega_0, k_0=k_0, omega_pi=omega_pi, alpha_i=alpha_i, E_vec=f[4:], k_vec=k_vec,
-                 omega_vec=omega_vec, dk=dk, v_0=np.sqrt(f[3]), omega_pe=omega_pe)
+                 omega_vec=omega_vec, dk=dk, v_0=np.sqrt(f[3]))
 
     print("t = ", t)
     print("max gamma = ", np.max(omega_vec.imag))
@@ -136,7 +134,7 @@ if __name__ == "__main__":
     omega_pi = omega_pe / np.sqrt(1836)  # Omega_ce
 
     # initial conditions
-    E0 = 5e-9
+    E0 = 1e-10
     K0 = (alpha_perp_c ** 2 / 2) * n_c  # + n_c * (v_0**2)
     T0 = (alpha_perp_c ** 2 / 2)
 
@@ -146,12 +144,11 @@ if __name__ == "__main__":
 
     # max time
     t_max = 600
-
     dE_init = E0 * np.ones(len(k_vec))
+
 
     # simulate
     result = scipy.integrate.solve_ivp(fun=dydt, t_span=[0, t_max],
                                        y0=np.concatenate(([K0], [T0], [dB0], [v_0 ** 2], dE_init)),
-                                       args=(k_vec, omega_pe, omega_pi, k_0, alpha_i, n_c, dk, omega_0),
-                                       atol=1e-10, rtol=1e-10,
-                                       method='BDF')
+                                       args=(k_vec, omega_pe, omega_pi, k_0, alpha_i, n_c, dk, omega_0, "perp_gamma"),
+                                       atol=1e-7, rtol=1e-7, method='LSODA')

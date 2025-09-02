@@ -7,7 +7,7 @@ V. Roytershteyn and G. L. Delzanno.
 Nonlinear coupling of whistler waves to oblique electrostatic turbulence enabled by cold plasma.
 Physics of Plasmas, 28(4):042903, 04 2021.
 
-Last modified: July 16th, 2025
+Last modified: Sept 2nd, 2025
 
 Author: Opal Issan (oissan@ucsd.edu)
 """
@@ -291,11 +291,15 @@ def dBdt(E_vec, omega_pe, alpha_c_par, alpha_c_perp, n_c, k_par, k_perp, omega_v
     :param k_0: float, whistler wave wavenumber
     :return: dBdt
     """
+    # perpendicular kinetic energy
     dK_perp_dt = dKperpdt(E_vec=E_vec, omega_pe=omega_pe, alpha_c_par=alpha_c_par, alpha_c_perp=alpha_c_perp,
                           n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec, dk=dk)
+    # parallel kinetic energy
     dK_par_dt = dKpardt(E_vec=E_vec, omega_pe=omega_pe, alpha_c_par=alpha_c_par, alpha_c_perp=alpha_c_perp,
                         n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec, dk=dk)
+    # electrostatic energy
     dE_dt = np.sum(dEdt(gamma=omega_vec.imag, E_vec=E_vec) * k_perp) * dk
+    # constant related to change of coordinates
     const = 1 + (omega_0 / k_0 / (1 - omega_0))**2
     return - 8 * np.pi / const * (dK_perp_dt + 0.5 * dK_par_dt + 1 / 8 / np.pi * dE_dt)
 

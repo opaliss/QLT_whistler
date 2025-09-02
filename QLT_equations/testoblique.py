@@ -41,8 +41,7 @@ def get_omega_vec(k_perp, k_par, omega_pe, omega_pi, v_0, alpha_i, alpha_c_perp,
                                                                       omega_0=omega_0, v_0=v_0,
                                                                       alpha_c_perp=alpha_c_perp, alpha_i=alpha_i,
                                                                       alpha_c_par=alpha_c_par, n_c=n_c,
-                                                                      m_star=m_star), x0=x0, tol=tol, x1=x1,
-                                                  maxiter=maxiter)
+                                                                      m_star=m_star), x0=x0, tol=tol, x1=x1, maxiter=maxiter)
             error = np.abs(dispersion_relation(k_perp=k_perp[ii], k_par=k_par[ii],
                                                omega_pe=omega_pe, omega_pi=omega_pi,
                                                omega_0=omega_0, v_0=v_0,

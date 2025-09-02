@@ -1,5 +1,5 @@
-"""Module with QLT equations describing the quasi-perp (ECDI-like) electrostatic
-secondary drift-driven instability
+"""Module with QLT equations describing the quasi-perp
+(ECDI-like) electrostatic secondary drift-driven instability
 
 References
 ----------
@@ -7,7 +7,7 @@ V. Roytershteyn and G. L. Delzanno.
 Nonlinear coupling of whistler waves to oblique electrostatic turbulence enabled by cold plasma.
 Physics of Plasmas, 28(4):042903, 04 2021
 
-Last modified: July 16th, 2025
+Last modified: Sept 2nd, 2025
 
 Author: Opal Issan (oissan@ucsd.edu)
 """
@@ -37,7 +37,7 @@ def dKdt(omega_pi, alpha_i, E_vec, k_vec, omega_vec, dk, omega_0, v_0, m_star=-3
         ions = ion_response(omega_pi=omega_pi, alpha_i=alpha_i, m_star=m_star,
                             omega=omega_vec[ii], omega_0=omega_0,
                             k_perp=k_vec[ii], v_0=v_0)
-        sol[ii] = E_vec[ii] * (omega_vec[ii] * (1 - ions / (k_vec[ii] ** 2))).imag
+        sol[ii] = E_vec[ii] * (omega_vec[ii] * (1 - ions / (k_vec[ii] ** 2))).imag * k_vec[ii]
     # integrate over all relevant wavenumbers
     return - 1 / 4 / np.pi * np.sum(sol) * dk
 
@@ -66,15 +66,18 @@ def dBdt(omega_pi, alpha_i, E_vec, k_vec, omega_vec, dk, omega_0, v_0, k_0):
     :param k_0: float, whistler wave wavenumber
     :return: int d|B(k, t)|^2dt
     """
+    # kinetic energy
     dK_perp_dt = dKdt(omega_pi=omega_pi, alpha_i=alpha_i,
                       E_vec=E_vec, k_vec=k_vec, omega_vec=omega_vec, dk=dk,
                       omega_0=omega_0, v_0=v_0)
+    # potential electrostatic energy
     dE_dt = np.sum(dEdt(gamma=omega_vec.imag, E_vec=E_vec) * k_vec) * dk
+    # constant related to change of coordinates
     const = 1 + (omega_0 / k_0 / np.abs(omega_0 - 1)) ** 2
     return - 8 * np.pi / const * (dK_perp_dt + 1 / 8 / np.pi * dE_dt)
 
 
-def dVdt(omega_0, k_0, omega_pi, alpha_i, E_vec, k_vec, omega_vec, dk, v_0, omega_pe):
+def dVdt(omega_0, k_0, omega_pi, alpha_i, E_vec, k_vec, omega_vec, dk, v_0):
     """change in cold electron drift dVdt
 
     :param omega_pi: float, ion plasma frequency
@@ -86,12 +89,11 @@ def dVdt(omega_0, k_0, omega_pi, alpha_i, E_vec, k_vec, omega_vec, dk, v_0, omeg
     :param omega_0: float, frequency of the primary driver whistler wave
     :param v_0: float, drift caused by the primary whistler wave
     :param k_0: float, wavenumber of the primary wave
-    :param omega_pe: float, electron plasma frequency
     :return: dVdt
     """
     const = 1 / 4 / np.pi * ((omega_0 / k_0 / (omega_0 - 1)) ** 2)
     return const * dBdt(omega_pi=omega_pi, alpha_i=alpha_i, E_vec=E_vec, k_vec=k_vec,
-                        omega_vec=omega_vec, dk=dk, omega_0=omega_0, v_0=v_0, k_0=k_0, omega_pe=omega_pe)
+                        omega_vec=omega_vec, dk=dk, omega_0=omega_0, v_0=v_0, k_0=k_0)
 
 
 def sum_bessel(lambda_, omega, n_max=20):
