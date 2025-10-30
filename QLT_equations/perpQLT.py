@@ -34,10 +34,11 @@ def dKdt(omega_pi, alpha_i, E_vec, k_vec, omega_vec, dk, omega_0, v_0, m_star=-3
     sol = np.zeros(len(k_vec))
     # loop over each wavenumber
     for ii in range(len(k_vec)):
-        ions = ion_response(omega_pi=omega_pi, alpha_i=alpha_i, m_star=m_star,
-                            omega=omega_vec[ii], omega_0=omega_0,
-                            k_perp=k_vec[ii], v_0=v_0)
-        sol[ii] = E_vec[ii] * (omega_vec[ii] * (1 - ions / (k_vec[ii] ** 2))).imag * k_vec[ii]
+        if omega_vec[ii] != 3*omega_0:
+            ions = ion_response(omega_pi=omega_pi, alpha_i=alpha_i, m_star=m_star,
+                                omega=omega_vec[ii], omega_0=omega_0,
+                                k_perp=k_vec[ii], v_0=v_0)
+            sol[ii] = E_vec[ii] * (omega_vec[ii] * (1 - ions / (k_vec[ii] ** 2))).imag * k_vec[ii]
     # integrate over all relevant wavenumbers
     return - 1 / 4 / np.pi * np.sum(sol) * dk
 
@@ -71,7 +72,7 @@ def dBdt(omega_pi, alpha_i, E_vec, k_vec, omega_vec, dk, omega_0, v_0, k_0):
                       E_vec=E_vec, k_vec=k_vec, omega_vec=omega_vec, dk=dk,
                       omega_0=omega_0, v_0=v_0)
     # potential electrostatic energy
-    dE_dt = np.sum(dEdt(gamma=omega_vec.imag, E_vec=E_vec) * k_vec) * dk
+    dE_dt = np.sum(dEdt(gamma=omega_vec.imag, E_vec=E_vec)*k_vec) * dk
     # constant related to change of coordinates
     const = 1 + (omega_0 / k_0 / np.abs(omega_0 - 1)) ** 2
     return - 8 * np.pi / const * (dK_perp_dt + 1 / 8 / np.pi * dE_dt)
@@ -124,7 +125,9 @@ def ion_response(omega_pi, alpha_i, m_star, omega, omega_0, k_perp, v_0):
     """
     a = k_perp * np.abs(v_0) / omega_0
     return (omega_pi ** 2) / (alpha_i ** 2) * (J(m=m_star, Lambda=a) ** 2) \
-           * Z_prime((omega + m_star * omega_0) / (np.abs(k_perp) * alpha_i))
+           * Z_prime(z=(omega + m_star * omega_0) / (np.abs(k_perp) * alpha_i))
+
+
 
 
 def cold_electron_response(k_perp, omega, n_max, omega_pe, alpha_perp_c, n_c):

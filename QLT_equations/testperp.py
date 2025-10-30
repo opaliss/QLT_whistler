@@ -6,10 +6,11 @@ import matplotlib
 
 matplotlib.use('TkAgg')
 from QLT_equations.perpQLT import dispersion_relation, dVdt, dBdt, dEdt, dKdt
+from QLT_equations.obliqueQLT import dKperpdt, dTperpdt
 
 
 def get_omega_vec(k_vec, omega_pe, omega_pi,
-                  v_0, alpha_i, alpha_perp_c, n_c, omega_0,
+                  v_0, alpha_i, alpha_perp_c, n_c, omega_0, ic1=None, ic2=None,
                    tol=1e-15, maxiter=1000):
     """
 
@@ -28,11 +29,20 @@ def get_omega_vec(k_vec, omega_pe, omega_pi,
     for ii in range(len(k_vec)):
         try:
             if ii > 0:
-                x0 = 3*omega_0 + 1e-3j
-                x1 = 2.5*omega_0 + 1e-3j
+                if ic1 == None:
+                    x0 = 3*omega_0 + 1e-3j
+                else:
+                    x0=ic1
+                if ic2==None:
+                    x1 = 3*omega_0 + 1e-4j
+                else:
+                    x1=ic2
             else:
                 x0 = omega_vec[ii - 1]
-                x1 = 3*omega_0 + 1e-3j
+                if ic1==None:
+                    x1 = 3*omega_0 + 1e-3j
+                else:
+                    x1 = ic1
             omega_vec[ii] = scipy.optimize.newton(dispersion_relation(k_perp=k_vec[ii], omega_pe=omega_pe, omega_0=omega_0,
                                                                       omega_pi=omega_pi, v_0=v_0, alpha_i=alpha_i,
                                                                       alpha_perp_c=alpha_perp_c, n_c=n_c),
@@ -44,13 +54,12 @@ def get_omega_vec(k_vec, omega_pe, omega_pi,
                                                                           alpha_perp_c=alpha_perp_c, n_c=n_c),
                                                       x0=2.8*omega_0 + 1e-3j, x1=3.5*omega_0 + 1e-3j, tol=tol, maxiter=maxiter)
             except:
-                omega_vec[ii] = omega_0*3 + 1e-3j
+                omega_vec[ii] = omega_0*3
                 print("k|_", str(k_vec[ii]))
-        if omega_vec[ii].imag > 0.1:
-            omega_vec[ii] = omega_vec[ii].real
-        if omega_vec[ii].imag < -0.2:
-            omega_vec[ii] = omega_vec[ii].real
-            print("negative val", k_vec[ii])
+        if omega_vec[ii].real > omega_0*4:
+            omega_vec[ii] = omega_0 * 3
+        if np.abs(omega_vec[ii].imag) > 0.02:
+            omega_vec[ii] = omega_0 * 3
     return omega_vec
 
 
@@ -71,6 +80,9 @@ def dydt(t, f, k_vec, omega_pe, omega_pi, k_0, alpha_i, n_c, dk, omega_0, folder
     :param plot: boolean, if true then save plots of growth rate
     :return:
     """
+    if f[3] < 0:
+        # drift velocity amplitude is negative
+        f[3] = 0
     # dispersion solver
     omega_vec = get_omega_vec(k_vec=k_vec, omega_pe=omega_pe, omega_pi=omega_pi,
                               v_0=np.sqrt(f[3]), omega_0=omega_0, alpha_i=alpha_i,
@@ -83,8 +95,6 @@ def dydt(t, f, k_vec, omega_pe, omega_pi, k_0, alpha_i, n_c, dk, omega_0, folder
             ax.plot(k_vec, omega_vec.imag, linewidth=2)
             ax.set_ylabel('$\gamma/|\Omega_{ce}|$', rotation=90)
             ax.set_xlabel(r"$k_{\perp}d_{e}$")
-            ax.set_ylim(-0.0005, 0.012)
-            ax.set_xlim(176, 220)
             ax.set_title("$t = $" + str(round(t)))
             ax.spines['right'].set_visible(False)
             ax.spines['top'].set_visible(False)
@@ -100,6 +110,19 @@ def dydt(t, f, k_vec, omega_pe, omega_pi, k_0, alpha_i, n_c, dk, omega_0, folder
 
     rhs_T = dKdt(omega_pi=omega_pi, alpha_i=alpha_i, E_vec=f[4:], k_vec=k_vec, omega_vec=omega_vec.real, dk=dk,
                  omega_0=omega_0, v_0=np.sqrt(f[3])) / n_c
+
+    # # cold electron kinetic energy
+    # rhs_K_perp = dKperpdt(E_vec=f[4:], omega_pe=omega_pe, alpha_c_par=0.0079,
+    #                       alpha_c_perp=np.sqrt(2 * f[1]), n_c=n_c, k_par=1e-2*k_vec, k_perp=k_vec, omega_vec=omega_vec,
+    #                       dk=dk, omega_0=omega_0)
+    #
+    # rhs_T_perp = dKperpdt(E_vec=f[4:], omega_pe=omega_pe, alpha_c_par=0.0079,
+    #                       alpha_c_perp=np.sqrt(2 * f[1]), n_c=n_c, k_par=1e-2*k_vec, k_perp=k_vec, omega_vec=omega_vec.real,
+    #                       dk=dk, omega_0=omega_0) / n_c
+    #
+    # rhs_T_perp_ = dTperpdt(E_vec=f[4:], omega_pe=omega_pe, alpha_c_par=0.0079,
+    #                       alpha_c_perp=np.sqrt(2 * f[1]),  k_par=1e-2*k_vec, k_perp=k_vec, omega_vec=omega_vec.real,
+    #                       dk=dk, omega_0=omega_0)
 
     # electrostatic electric energy
     rhs_E = dEdt(gamma=omega_vec.imag, E_vec=f[4:])

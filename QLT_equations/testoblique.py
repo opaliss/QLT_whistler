@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
+import math
 
 matplotlib.use('TkAgg')
 import os
@@ -9,7 +10,7 @@ from QLT_equations.obliqueQLT import dispersion_relation, dKperpdt, dTperpdt, dK
 
 
 def get_omega_vec(k_perp, k_par, omega_pe, omega_pi, v_0, alpha_i, alpha_c_perp, alpha_c_par, n_c, omega_0,
-                  m_star=-1, ic1=0.5 * 0.99 + 1e-3j, ic2=0.5 * 0.99 + 1e-5j, tol=1e-15, maxiter=100):
+                  m_star=-1, ic1=0.5 * 0.99 + 1e-3j, ic2=0.5 * 0.99 + 1e-5j, tol=1e-15, maxiter=200):
     """
 
     :param ic2:
@@ -30,7 +31,7 @@ def get_omega_vec(k_perp, k_par, omega_pe, omega_pi, v_0, alpha_i, alpha_c_perp,
     omega_vec = np.zeros(len(k_perp), dtype="complex128")
     for ii in range(len(k_perp)):
         try:
-            if ii > 0:
+            if ii > 0 or omega_vec[ii - 1] == omega_0:
                 x0 = ic1
                 x1 = ic2
             else:
@@ -41,14 +42,15 @@ def get_omega_vec(k_perp, k_par, omega_pe, omega_pi, v_0, alpha_i, alpha_c_perp,
                                                                       omega_0=omega_0, v_0=v_0,
                                                                       alpha_c_perp=alpha_c_perp, alpha_i=alpha_i,
                                                                       alpha_c_par=alpha_c_par, n_c=n_c,
-                                                                      m_star=m_star), x0=x0, tol=tol, x1=x1, maxiter=maxiter)
+                                                                      m_star=m_star), x0=x0, tol=tol, x1=x1,
+                                                  maxiter=maxiter)
             error = np.abs(dispersion_relation(k_perp=k_perp[ii], k_par=k_par[ii],
                                                omega_pe=omega_pe, omega_pi=omega_pi,
                                                omega_0=omega_0, v_0=v_0,
                                                alpha_c_perp=alpha_c_perp, alpha_i=alpha_i,
                                                alpha_c_par=alpha_c_par, n_c=n_c,
                                                m_star=m_star)(omega_vec[ii]))
-            if error > 1e-4:
+            if error > 1e-3:
                 print("error is large |k| = ", str(np.sqrt(k_par[ii] ** 2 + k_perp[ii] ** 2)))
                 omega_vec[ii] = omega_0
         except:
@@ -67,7 +69,7 @@ def get_omega_vec(k_perp, k_par, omega_pe, omega_pi, v_0, alpha_i, alpha_c_perp,
                                                    alpha_c_perp=alpha_c_perp, alpha_i=alpha_i,
                                                    alpha_c_par=alpha_c_par, n_c=n_c,
                                                    m_star=m_star)(omega_vec[ii]))
-                if error > 1e-4:
+                if error > 1e-3:
                     print("error is large |k| = ", str(np.sqrt(k_par[ii] ** 2 + k_perp[ii] ** 2)))
                     omega_vec[ii] = omega_0
 
@@ -76,10 +78,10 @@ def get_omega_vec(k_perp, k_par, omega_pe, omega_pi, v_0, alpha_i, alpha_c_perp,
                 omega_vec[ii] = omega_0
 
         if np.abs(omega_vec[ii].imag) > 0.02:
-            omega_vec[ii] = omega_vec[ii].real
-        if omega_vec[ii].imag < -0.1:
-            omega_vec[ii] = omega_vec[ii].real
-        if omega_vec[ii].real > 0.7:
+            omega_vec[ii] = omega_0
+        if np.abs(omega_vec[ii].real) > omega_0:
+            omega_vec[ii] = omega_0
+        if omega_vec[ii].imag < -0.01:
             omega_vec[ii] = omega_0
     return omega_vec
 
@@ -105,11 +107,6 @@ def dydt(t, f, k_perp, k_par, omega_pe, omega_pi, k_0, alpha_i, n_c, dk,
     :param folder_name:
     :return:
     """
-    if len(np.where(f[6:] < 0)) > 1:
-        # check where dE becomes negative
-        print("negative dE was found")
-        f[6:][np.where(f[6:] < 0)] = np.zeros(len(np.where(f[6:] < 0)))
-
     # dispersion solver
     omega_vec = get_omega_vec(k_perp=k_perp, k_par=k_par, omega_pe=omega_pe, omega_pi=omega_pi,
                               v_0=np.sqrt(np.abs(f[5])),
@@ -150,24 +147,29 @@ def dydt(t, f, k_perp, k_par, omega_pe, omega_pi, k_0, alpha_i, n_c, dk,
     # cold electron kinetic energy
     rhs_K_perp = dKperpdt(E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]),
                           alpha_c_perp=np.sqrt(2 * f[2]), n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec,
-                          dk=dk)
+                          dk=dk, omega_0=omega_0)
 
     rhs_K_par = dKpardt(E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]), alpha_c_perp=np.sqrt(2 * f[2]),
-                        n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec, dk=dk)
+                        n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec, dk=dk, omega_0=omega_0)
 
-    # rhs_K_perp_res = dKperpdt(E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]),
+    # # cold electron kinetic energy
+    # rhs_K_perp_ = dKperpdt(E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]),
     #                       alpha_c_perp=np.sqrt(2 * f[2]), n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec.real,
-    #                       dk=dk)
+    #                       dk=dk, omega_0=omega_0) / n_c
     #
-    # rhs_K_par_res = dKpardt(E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]), alpha_c_perp=np.sqrt(2 * f[2]),
-    #                     n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec.real, dk=dk)
+    # rhs_K_par_ = dKpardt(E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]), alpha_c_perp=np.sqrt(2 * f[2]),
+    #                     n_c=n_c, k_par=k_par, k_perp=k_perp, omega_vec=omega_vec.real, dk=dk, omega_0=omega_0) / n_c
 
     # cold electron temperature
-    rhs_T_perp = dTperpdt(E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]), alpha_c_perp=np.sqrt(2 * f[2]),
-                          k_par=k_par, k_perp=k_perp, omega_vec=omega_vec, dk=dk)
+    rhs_T_perp = dTperpdt(E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]),
+                          alpha_c_perp=np.sqrt(2 * f[2]),
+                          k_par=k_par, k_perp=k_perp, omega_vec=omega_vec.real, dk=dk, omega_0=omega_0)
 
     rhs_T_par = dTpardt(E_vec=f[6:], omega_pe=omega_pe, alpha_c_par=np.sqrt(2 * f[3]), alpha_c_perp=np.sqrt(2 * f[2]),
-                        k_par=k_par, k_perp=k_perp, omega_vec=omega_vec, dk=dk)
+                k_par=k_par, k_perp=k_perp, omega_vec=omega_vec.real, dk=dk, omega_0=omega_0)
+
+    # if rhs_T_par < 0:
+    #     print("d/dtT_{\par} < 0 ")
 
     # magnetic energy whistler
     rhs_B = dBdt(E_vec=f[6:], omega_pe=omega_pe,
@@ -190,7 +192,6 @@ def dydt(t, f, k_perp, k_par, omega_pe, omega_pi, k_0, alpha_i, n_c, dk,
     return np.concatenate(([rhs_K_perp], [rhs_K_par], [rhs_T_perp], [rhs_T_par], [rhs_B], [rhs_V], rhs_E))
 
 
-
 if __name__ == "__main__":
     # parameters from 2021 paper
     # normalization (vadim parameters)
@@ -206,40 +207,43 @@ if __name__ == "__main__":
     alpha_c_perp = 0.0079  # d_e x Omega_ce
     alpha_i = alpha_c_par / np.sqrt(1836)  # d_e x Omega_ce
 
-    v_0 = 0.65 * alpha_c_par  # d_e x Omega_ce
+    v_0 = 0.65 * alpha_c_par * 0.5 / np.abs(1-omega_0)  # d_e x Omega_ce
     omega_pi = omega_pe / np.sqrt(1836)  # Omega_ce
 
     # initial conditions
-    E0 = 1e-9
+    E0 = 1e-11
     K_perp_0 = ((alpha_c_perp ** 2) / 2) * n_c
     K_par_0 = ((alpha_c_par ** 2) / 2) * n_c
     T_perp_0 = ((alpha_c_perp ** 2) / 2)
     T_par_0 = ((alpha_c_par ** 2) / 2)
     k_0 = 1  # d_e
-    dB0 = 4 * np.pi * 2.5 * 1e-5  # d_{e}^3 Omega_{ce}^2 m_{e} n_{e}
+    dB0 = 4e-4  # d_{e}^3 Omega_{ce}^2 m_{e} n_{e}
 
     m_star = -1
-    ic1 = 0.5 * 0.99 + 1e-3j
-    ic2 = 0.5 * 0.99 + 1e-5j
-
+    ic1 = omega_0 * 0.98 + 1e-3j
+    ic2 = omega_0 * 0.99 + 1e-2j
     # max time
     t_max = 600
 
-    k_perp_ = np.linspace(10, 50, 50)
-    k_par_ = np.sqrt((omega_0 ** 2) / (1 - omega_0 ** 2)) * k_perp_
+    k_ = np.linspace(8, 52, 50)
+    theta = math.acos(omega_0)
+    k_perp_ = k_ * np.sin(theta)
+    k_par_ = k_ * np.cos(theta)
+
     sol_ = np.zeros((len(k_perp_)), dtype="complex128")
-    k_abs = np.zeros((len(k_perp_)))
+
+    k_abs = np.sqrt(k_perp_ ** 2 + k_par_ ** 2)
     dk_perp = np.abs(k_perp_[1] - k_perp_[0])
     dk_par = np.abs(k_par_[1] - k_par_[0])
-    dk_abs = np.abs(k_abs[1] - k_abs[0])
+    dk = np.abs(k_[1] - k_[0])
+
     dE_init = E0 * np.ones(len(k_perp_))
 
     # simulate
     result = scipy.integrate.solve_ivp(fun=dydt, t_span=[0, t_max],
                                        y0=np.concatenate(
                                            ([K_perp_0], [K_par_0], [T_perp_0], [T_par_0], [dB0], [v_0 ** 2], dE_init)),
-                                       args=(k_perp_, k_par_, omega_pe, omega_pi, k_0, alpha_i, n_c, dk_perp * dk_par,
-                                             omega_0, m_star, ic1, ic2, "oblique_gamma", False),
+                                       args=(k_perp_, k_par_, omega_pe, omega_pi, k_0, alpha_i, n_c, dk,
+                                             omega_0, m_star, ic1, ic2, "oblique_gamma", True),
                                        atol=1e-9, rtol=1e-9,
-                                       method='Radau')
-
+                                       method='LSODA')
